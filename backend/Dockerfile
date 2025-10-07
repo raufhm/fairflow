@@ -17,8 +17,20 @@ COPY go.mod go.sum ./
 # Download dependencies (cached if go.mod/go.sum unchanged)
 RUN go mod download && go mod verify
 
+# ============================================
+# Test stage
+# ============================================
+FROM builder AS tester
+
 # Copy source code
 COPY . .
+
+# Run unit tests
+RUN go test ./...
+
+# ============================================
+# Build stage
+# ============================================
 
 # Build binaries with optimization flags
 # CGO_ENABLED=0 for static binaries (no C dependencies)

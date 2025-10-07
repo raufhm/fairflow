@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/raufhm/rra/internal/middleware"
-	"github.com/raufhm/rra/internal/usecase"
+	"github.com/raufhm/fairflow/internal/middleware"
+	"github.com/raufhm/fairflow/internal/usecase"
 )
 
 type AssignmentHandler struct {
@@ -150,8 +150,8 @@ func (h *AssignmentHandler) CompleteAssignment(w http.ResponseWriter, r *http.Re
 	}
 
 	respondJSON(w, http.StatusOK, map[string]interface{}{
-		"message":    "Assignment completed successfully",
-		"timestamp":  getCurrentTimestamp(),
+		"message":   "Assignment completed successfully",
+		"timestamp": getCurrentTimestamp(),
 	})
 }
 
@@ -175,7 +175,7 @@ func (h *AssignmentHandler) CancelAssignment(w http.ResponseWriter, r *http.Requ
 	}
 
 	respondJSON(w, http.StatusOK, map[string]interface{}{
-		"message":    "Assignment cancelled successfully",
-		"timestamp":  getCurrentTimestamp(),
+		"message":   "Assignment cancelled successfully",
+		"timestamp": getCurrentTimestamp(),
 	})
 }

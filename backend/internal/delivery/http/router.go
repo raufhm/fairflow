@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/raufhm/rra/internal/middleware"
-	"github.com/raufhm/rra/internal/usecase"
-	"github.com/raufhm/rra/pkg/crypto"
+	"github.com/raufhm/fairflow/internal/middleware"
+	"github.com/raufhm/fairflow/internal/usecase"
+	"github.com/raufhm/fairflow/pkg/crypto"
 )
 
 type Router struct {

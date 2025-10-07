@@ -8,9 +8,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/raufhm/rra/internal/domain"
-	"github.com/raufhm/rra/internal/usecase"
-	"github.com/raufhm/rra/pkg/crypto"
+	"github.com/raufhm/fairflow/internal/domain"
+	"github.com/raufhm/fairflow/internal/usecase"
+	"github.com/raufhm/fairflow/pkg/crypto"
 )
 
 type contextKey string

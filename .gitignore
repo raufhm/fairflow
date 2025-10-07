@@ -6,9 +6,6 @@
 *.dylib
 
 # Server bin related
-server
-backend/server
-cmd/server/server
 bin
 
 # Guide and Plan
@@ -55,9 +52,6 @@ build/
 # Data directories
 data/
 backups/
-
-# Engine
-.claude
 
 # Temporary files
 *.log

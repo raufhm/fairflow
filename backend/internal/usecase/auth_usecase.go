@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/raufhm/rra/internal/domain"
-	"github.com/raufhm/rra/pkg/crypto"
+	"github.com/raufhm/fairflow/internal/domain"
+	"github.com/raufhm/fairflow/pkg/crypto"
 	"golang.org/x/crypto/bcrypt"
 )
 

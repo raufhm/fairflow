@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/raufhm/rra/internal/domain"
+	"github.com/raufhm/fairflow/internal/domain"
 )
 
 type GroupUseCase struct {
@@ -240,4 +240,3 @@ func (uc *GroupUseCase) ResumeGroup(groupID, userID int64, userName string) erro
 
 	return nil
 }
-

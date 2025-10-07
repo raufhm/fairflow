@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/raufhm/rra/internal/domain"
+	"github.com/raufhm/fairflow/internal/domain"
 )
 
 // Notifier handles webhook notifications

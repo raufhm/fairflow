@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/raufhm/rra/internal/domain"
+	"github.com/raufhm/fairflow/internal/domain"
 )
 
 type WebhookUseCase struct {

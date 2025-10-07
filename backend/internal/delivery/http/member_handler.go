@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/raufhm/rra/internal/middleware"
-	"github.com/raufhm/rra/internal/usecase"
+	"github.com/raufhm/fairflow/internal/middleware"
+	"github.com/raufhm/fairflow/internal/usecase"
 )
 
 type MemberHandler struct {

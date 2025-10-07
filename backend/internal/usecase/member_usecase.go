@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/raufhm/rra/internal/domain"
+	"github.com/raufhm/fairflow/internal/domain"
 )
 
 type MemberUseCase struct {

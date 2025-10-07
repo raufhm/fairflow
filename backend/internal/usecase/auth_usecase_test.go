@@ -3,110 +3,14 @@ package usecase_test
 import (
 	"testing"
 
-	"github.com/raufhm/rra/internal/domain"
-	"github.com/raufhm/rra/internal/usecase"
+	"github.com/raufhm/fairflow/internal/domain"
+	"github.com/raufhm/fairflow/internal/usecase"
 	"golang.org/x/crypto/bcrypt"
 )
 
-type mockUserRepo struct {
-	users map[int64]*domain.User
-}
-
-func (m *mockUserRepo) Create(user *domain.User) error {
-	user.ID = int64(len(m.users) + 1)
-	m.users[user.ID] = user
-	return nil
-}
-
-func (m *mockUserRepo) GetByID(id int64) (*domain.User, error) {
-	if u, ok := m.users[id]; ok {
-		return u, nil
-	}
-	return nil, nil
-}
-
-func (m *mockUserRepo) GetByEmail(email string) (*domain.User, error) {
-	for _, u := range m.users {
-		if u.Email == email {
-			return u, nil
-		}
-	}
-	return nil, nil
-}
-
-func (m *mockUserRepo) GetAll() ([]*domain.User, error) {
-	var users []*domain.User
-	for _, u := range m.users {
-		users = append(users, u)
-	}
-	return users, nil
-}
-
-func (m *mockUserRepo) Update(user *domain.User) error {
-	m.users[user.ID] = user
-	return nil
-}
-
-func (m *mockUserRepo) Delete(id int64) error {
-	delete(m.users, id)
-	return nil
-}
-
-func (m *mockUserRepo) UpdateRole(id int64, role domain.UserRole) error {
-	if u, ok := m.users[id]; ok {
-		u.Role = role
-	}
-	return nil
-}
-
-type mockAPIKeyRepo struct {
-	keys map[int64]*domain.APIKey
-}
-
-func (m *mockAPIKeyRepo) Create(key *domain.APIKey) error {
-	key.ID = int64(len(m.keys) + 1)
-	m.keys[key.ID] = key
-	return nil
-}
-
-func (m *mockAPIKeyRepo) GetByUserID(userID int64) ([]*domain.APIKey, error) {
-	var keys []*domain.APIKey
-	for _, k := range m.keys {
-		if k.UserID == userID {
-			keys = append(keys, k)
-		}
-	}
-	return keys, nil
-}
-
-func (m *mockAPIKeyRepo) GetByHash(hash string) (*domain.APIKey, error) {
-	for _, k := range m.keys {
-		if k.KeyHash == hash {
-			return k, nil
-		}
-	}
-	return nil, nil
-}
-
-func (m *mockAPIKeyRepo) Delete(id int64) error {
-	delete(m.keys, id)
-	return nil
-}
-
-func (m *mockAPIKeyRepo) UpdateLastUsed(id int64) error {
-	return nil
-}
-
-func (m *mockAPIKeyRepo) GetByID(id int64) (*domain.APIKey, error) {
-	if k, ok := m.keys[id]; ok {
-		return k, nil
-	}
-	return nil, nil
-}
-
 func TestRegister(t *testing.T) {
-	userRepo := &mockUserRepo{users: make(map[int64]*domain.User)}
-	apiKeyRepo := &mockAPIKeyRepo{keys: make(map[int64]*domain.APIKey)}
+	userRepo := newMockUserRepo()
+	apiKeyRepo := newMockAPIKeyRepo()
 	auditRepo := &mockAuditRepo{}
 
 	uc := usecase.NewAuthUseCase(userRepo, apiKeyRepo, auditRepo, "test-secret")
@@ -143,8 +47,8 @@ func TestRegister(t *testing.T) {
 }
 
 func TestLogin(t *testing.T) {
-	userRepo := &mockUserRepo{users: make(map[int64]*domain.User)}
-	apiKeyRepo := &mockAPIKeyRepo{keys: make(map[int64]*domain.APIKey)}
+	userRepo := newMockUserRepo()
+	apiKeyRepo := newMockAPIKeyRepo()
 	auditRepo := &mockAuditRepo{}
 
 	uc := usecase.NewAuthUseCase(userRepo, apiKeyRepo, auditRepo, "test-secret")
@@ -182,8 +86,8 @@ func TestLogin(t *testing.T) {
 }
 
 func TestGenerateAPIKey(t *testing.T) {
-	userRepo := &mockUserRepo{users: make(map[int64]*domain.User)}
-	apiKeyRepo := &mockAPIKeyRepo{keys: make(map[int64]*domain.APIKey)}
+	userRepo := newMockUserRepo()
+	apiKeyRepo := newMockAPIKeyRepo()
 	auditRepo := &mockAuditRepo{}
 
 	uc := usecase.NewAuthUseCase(userRepo, apiKeyRepo, auditRepo, "test-secret")
@@ -213,8 +117,8 @@ func TestGenerateAPIKey(t *testing.T) {
 }
 
 func TestVerifyAPIKey(t *testing.T) {
-	userRepo := &mockUserRepo{users: make(map[int64]*domain.User)}
-	apiKeyRepo := &mockAPIKeyRepo{keys: make(map[int64]*domain.APIKey)}
+	userRepo := newMockUserRepo()
+	apiKeyRepo := newMockAPIKeyRepo()
 	auditRepo := &mockAuditRepo{}
 
 	uc := usecase.NewAuthUseCase(userRepo, apiKeyRepo, auditRepo, "test-secret")

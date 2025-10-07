@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/raufhm/rra/internal/domain"
+	"github.com/raufhm/fairflow/internal/domain"
 )
 
 type AssignmentUseCase struct {

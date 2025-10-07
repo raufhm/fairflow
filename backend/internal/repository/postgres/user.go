@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/raufhm/rra/internal/domain"
+	"github.com/raufhm/fairflow/internal/domain"
 	"github.com/uptrace/bun"
 )
 
