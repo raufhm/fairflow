@@ -168,7 +168,7 @@ Real-time dashboard shows:
 ```bash
 # 1. Clone repository
 git clone https://github.com/raufhm/fairflow.git
-cd rra
+cd fairflow
 
 # 2. Set up managed PostgreSQL (Neon, AWS RDS, or Cloud SQL)
 # Create your database and get the connection URL
@@ -187,7 +187,7 @@ curl http://localhost:3000/health
 ### For Local Development
 
 ```bash
-cd rra/backend
+cd fairflow/backend
 
 # Configure local environment
 cp .env.example .env
