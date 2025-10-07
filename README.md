@@ -167,7 +167,7 @@ Real-time dashboard shows:
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/raufhm/rra.git
+git clone https://github.com/raufhm/fairflow.git
 cd rra
 
 # 2. Set up managed PostgreSQL (Neon, AWS RDS, or Cloud SQL)
@@ -228,7 +228,7 @@ MIT License
 
 ## Support
 
-**Issues**: [github.com/raufhm/rra/issues](https://github.com/raufhm/rra/issues)
+**Issues**: [github.com/raufhm/fairflow/issues](https://github.com/raufhm/rra/issues)
 
 ---
 
