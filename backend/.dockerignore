@@ -1,0 +1,73 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+README*
+LICENSE
+CHANGELOG*
+docs/
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build artifacts
+bin/
+dist/
+build/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test files
+*_test.go
+testdata/
+coverage.*
+*.test
+
+# Dependencies (will be downloaded in container)
+vendor/
+
+# Environment files (secrets)
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.crt
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.log
+*.bak
+*.old
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Development tools
+Makefile
+docker-compose*.yml
+Dockerfile*
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+.circleci/
+
+# Handbook & Planning (private docs)
+handbook/
+k8s/

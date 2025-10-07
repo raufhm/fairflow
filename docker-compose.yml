@@ -1,0 +1,53 @@
+version: '3.8'
+
+# Docker Compose for Production/Staging Deployment
+# Requires managed PostgreSQL database (Neon, AWS RDS, Google Cloud SQL, etc.)
+# NOTE: Requires .env file with DATABASE_URL and JWT_SECRET
+
+services:
+  # Migration service - runs once before backend starts
+  migrate:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fairflow-migrate
+    command: /app/migrate up
+    environment:
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET is required}
+      - DATABASE_URL=${DATABASE_URL:?DATABASE_URL is required}
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+    restart: "no"  # Run once only
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fairflow-backend
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - PORT=3000
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET is required}
+      - DATABASE_URL=${DATABASE_URL:?DATABASE_URL is required}
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    # Health check for backend
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

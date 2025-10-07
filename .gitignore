@@ -1,0 +1,67 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Server bin related
+server
+backend/server
+cmd/server/server
+bin
+
+# Guide and Plan
+handbook
+k8s
+
+# Migrations (keep only in repo for first commit, then gitignore)
+backend/migrations/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment files
+# Local development env file (contains secrets)
+.env
+.env.local
+
+# Keep .env.example in repo as template
+!.env.example
+
+# Kubernetes secrets (keep examples only)
+k8s/secret.yaml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Data directories
+data/
+backups/
+
+# Engine
+.claude
+
+# Temporary files
+*.log
+*.tmp
+*.bak
+*.old
+*~
