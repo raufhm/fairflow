@@ -2,6 +2,7 @@ package http
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/raufhm/fairflow/internal/middleware"
@@ -53,6 +54,9 @@ func (r *Router) SetupRoutes() http.Handler {
 
 	// Auth middleware wrapper
 	authMiddleware := middleware.AuthMiddleware(r.authUseCase, r.tokenService)
+
+	// Health check endpoint
+	router.Get("/health", r.healthCheck)
 
 	// Public routes (no auth required)
 	router.Post("/api/v1/auth/register", r.authHandler.Register)
@@ -119,4 +123,13 @@ func (r *Router) SetupRoutes() http.Handler {
 	})
 
 	return router
+}
+
+func (r *Router) healthCheck(w http.ResponseWriter, req *http.Request) {
+	response := map[string]interface{}{
+		"status":    "healthy",
+		"timestamp": time.Now().UTC().Format(time.RFC3339),
+		"service":   "fairflow-api",
+	}
+	respondJSON(w, http.StatusOK, response)
 }
