@@ -1,0 +1,107 @@
+services:
+  # Microservices - All connect to Neon Database (cloud-hosted PostgreSQL)
+  auth-service:
+    build:
+      context: .
+      dockerfile: services/auth/Dockerfile
+    container_name: fairflow-auth
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - ENVIRONMENT=development
+      - LOG_LEVEL=info
+    networks:
+      - fairflow-network
+    restart: unless-stopped
+
+  group-service:
+    build:
+      context: .
+      dockerfile: services/group/Dockerfile
+    container_name: fairflow-group
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - ENVIRONMENT=development
+      - LOG_LEVEL=info
+    networks:
+      - fairflow-network
+    restart: unless-stopped
+
+  member-service:
+    build:
+      context: .
+      dockerfile: services/member/Dockerfile
+    container_name: fairflow-member
+    ports:
+      - "3003:3003"
+    environment:
+      - PORT=3003
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - ENVIRONMENT=development
+      - LOG_LEVEL=info
+    networks:
+      - fairflow-network
+    restart: unless-stopped
+
+  assignment-service:
+    build:
+      context: .
+      dockerfile: services/assignment/Dockerfile
+    container_name: fairflow-assignment
+    ports:
+      - "3004:3004"
+    environment:
+      - PORT=3004
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - ENVIRONMENT=development
+      - LOG_LEVEL=info
+    networks:
+      - fairflow-network
+    restart: unless-stopped
+
+  webhook-service:
+    build:
+      context: .
+      dockerfile: services/webhook/Dockerfile
+    container_name: fairflow-webhook
+    ports:
+      - "3005:3005"
+    environment:
+      - PORT=3005
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - ENVIRONMENT=development
+      - LOG_LEVEL=info
+    networks:
+      - fairflow-network
+    restart: unless-stopped
+
+  analytics-service:
+    build:
+      context: .
+      dockerfile: services/analytics/Dockerfile
+    container_name: fairflow-analytics
+    ports:
+      - "3007:3007"
+    environment:
+      - PORT=3007
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - ENVIRONMENT=development
+      - LOG_LEVEL=info
+    networks:
+      - fairflow-network
+    restart: unless-stopped
+
+networks:
+  fairflow-network:
+    driver: bridge
