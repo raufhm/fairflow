@@ -1,6 +1,7 @@
 package postgres_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -27,7 +28,7 @@ func TestAssignmentRepository_Create(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(1)
 	mock.ExpectQuery(`INSERT INTO "assignments"`).WillReturnRows(rows)
 
-	err = assignmentRepo.Create(assignment)
+	err = assignmentRepo.Create(context.Background(), assignment)
 
 	assert.NoError(t, err)
 }
@@ -43,7 +44,7 @@ func TestAssignmentRepository_GetByID(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(1)
 	mock.ExpectQuery(`SELECT (.+) FROM "assignments"`).WillReturnRows(rows)
 
-	_, err = assignmentRepo.GetByID(1)
+	_, err = assignmentRepo.GetByID(context.Background(), 1)
 
 	assert.NoError(t, err)
 }
@@ -58,7 +59,7 @@ func TestAssignmentRepository_UpdateStatus(t *testing.T) {
 
 	mock.ExpectExec(`UPDATE "assignments"`).WillReturnResult(sqlmock.NewResult(1, 1))
 
-	err = assignmentRepo.UpdateStatus(1, domain.AssignmentStatusCompleted)
+	err = assignmentRepo.UpdateStatus(context.Background(), 1, domain.AssignmentStatusCompleted)
 
 	assert.NoError(t, err)
 }
@@ -74,7 +75,7 @@ func TestAssignmentRepository_GetByGroupID(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(1)
 	mock.ExpectQuery(`SELECT a.id, a.metadata, a.created_at, m.id as member_id, m.name as member_name FROM assignments AS a JOIN members AS m ON a.member_id = m.id WHERE (.+)`).WillReturnRows(rows)
 
-	_, err = assignmentRepo.GetByGroupID(1, 10, 0)
+	_, err = assignmentRepo.GetByGroupID(context.Background(), 1, 10, 0)
 
 	assert.NoError(t, err)
 }
@@ -90,7 +91,7 @@ func TestAssignmentRepository_GetCountByGroupID(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"count"}).AddRow(1)
 	mock.ExpectQuery(`SELECT count(.+) FROM "assignments"`).WillReturnRows(rows)
 
-	_, err = assignmentRepo.GetCountByGroupID(1)
+	_, err = assignmentRepo.GetCountByGroupID(context.Background(), 1)
 
 	assert.NoError(t, err)
 }
@@ -106,7 +107,7 @@ func TestAssignmentRepository_GetCountsByMemberIDs(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"member_id", "count"}).AddRow(1, 1)
 	mock.ExpectQuery(`SELECT member_id, COUNT(.+) as count FROM assignments WHERE (.+) GROUP BY "member_id"`).WillReturnRows(rows)
 
-	_, err = assignmentRepo.GetCountsByMemberIDs([]int64{1})
+	_, err = assignmentRepo.GetCountsByMemberIDs(context.Background(), []int64{1})
 
 	assert.NoError(t, err)
 }

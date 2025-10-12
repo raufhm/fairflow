@@ -1,6 +1,7 @@
 package usecase_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/raufhm/fairflow/internal/domain"
@@ -13,7 +14,7 @@ func TestCreateWebhook(t *testing.T) {
 	auditRepo := &mockAuditRepo{}
 	uc := usecase.NewWebhookUseCase(webhookRepo, auditRepo)
 
-	webhook, err := uc.CreateWebhook(1, 1, "http://example.com", []string{"assignment.created"})
+	webhook, err := uc.CreateWebhook(context.Background(), 1, 1, "http://example.com", []string{"assignment.created"})
 
 	assert.NoError(t, err)
 	assert.NotNil(t, webhook)
@@ -26,7 +27,7 @@ func TestGetWebhooksByGroup(t *testing.T) {
 	webhookRepo.webhooks[2] = &domain.Webhook{ID: 2, GroupID: 1, URL: "http://example2.com"}
 	uc := usecase.NewWebhookUseCase(webhookRepo, nil)
 
-	webhooks, err := uc.GetWebhooksByGroup(1)
+	webhooks, err := uc.GetWebhooksByGroup(context.Background(), 1)
 
 	assert.NoError(t, err)
 	assert.Len(t, webhooks, 2)
@@ -39,7 +40,7 @@ func TestUpdateWebhook(t *testing.T) {
 	uc := usecase.NewWebhookUseCase(webhookRepo, auditRepo)
 
 	updatedWebhook := &domain.Webhook{ID: 1, GroupID: 1, URL: "http://new-example.com"}
-	err := uc.UpdateWebhook(1, updatedWebhook)
+	err := uc.UpdateWebhook(context.Background(), 1, updatedWebhook)
 
 	assert.NoError(t, err)
 	webhook, _ := webhookRepo.webhooks[1]
@@ -52,7 +53,7 @@ func TestDeleteWebhook(t *testing.T) {
 	auditRepo := &mockAuditRepo{}
 	uc := usecase.NewWebhookUseCase(webhookRepo, auditRepo)
 
-	err := uc.DeleteWebhook(1, 1)
+	err := uc.DeleteWebhook(context.Background(), 1, 1)
 
 	assert.NoError(t, err)
 	_, ok := webhookRepo.webhooks[1]

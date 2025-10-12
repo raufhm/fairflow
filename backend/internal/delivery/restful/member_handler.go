@@ -1,4 +1,4 @@
-package http
+package restful
 
 import (
 	"encoding/json"
@@ -36,13 +36,14 @@ type UpdateMemberRequest struct {
 
 // GetMembers retrieves all members of a group
 func (h *MemberHandler) GetMembers(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	groupID := getIDFromPath(r, "/api/v1/groups/", "/members")
 	if groupID == 0 {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": "Invalid group ID"})
 		return
 	}
 
-	members, err := h.memberUseCase.GetMembers(groupID)
+	members, err := h.memberUseCase.GetMembers(ctx, groupID)
 	if err != nil {
 		respondJSON(w, http.StatusInternalServerError, map[string]string{"message": "Failed to retrieve members"})
 		return
@@ -59,6 +60,7 @@ func (h *MemberHandler) CreateMember(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
 	groupID := getIDFromPath(r, "/api/v1/groups/", "/members")
 	if groupID == 0 {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": "Invalid group ID"})
@@ -66,7 +68,7 @@ func (h *MemberHandler) CreateMember(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if user can modify group
-	canModify, err := h.groupUseCase.CanModifyGroup(groupID, user.ID, user.Role)
+	canModify, err := h.groupUseCase.CanModifyGroup(ctx, groupID, user.ID, user.Role)
 	if err != nil || !canModify {
 		respondJSON(w, http.StatusForbidden, map[string]string{"message": "Forbidden: You do not have permission to modify this group"})
 		return
@@ -87,7 +89,7 @@ func (h *MemberHandler) CreateMember(w http.ResponseWriter, r *http.Request) {
 		req.Weight = 100
 	}
 
-	member, err := h.memberUseCase.CreateMember(groupID, user.ID, user.Name, req.Name, req.Email, req.Weight)
+	member, err := h.memberUseCase.CreateMember(ctx, groupID, user.ID, user.Name, req.Name, req.Email, req.Weight)
 	if err != nil {
 		// Log the actual error for debugging
 		respondJSON(w, http.StatusInternalServerError, map[string]string{
@@ -111,6 +113,7 @@ func (h *MemberHandler) UpdateMember(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
 	groupID, memberID := getMemberIDs(r)
 	if groupID == 0 || memberID == 0 {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": "Invalid group or member ID"})
@@ -118,7 +121,7 @@ func (h *MemberHandler) UpdateMember(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if user can modify group
-	canModify, err := h.groupUseCase.CanModifyGroup(groupID, user.ID, user.Role)
+	canModify, err := h.groupUseCase.CanModifyGroup(ctx, groupID, user.ID, user.Role)
 	if err != nil || !canModify {
 		respondJSON(w, http.StatusForbidden, map[string]string{"message": "Forbidden: You do not have permission to modify this group"})
 		return
@@ -130,7 +133,7 @@ func (h *MemberHandler) UpdateMember(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.memberUseCase.UpdateMember(memberID, user.ID, user.Name, req.Name, req.Email, req.Weight, req.Active); err != nil {
+	if err := h.memberUseCase.UpdateMember(ctx, memberID, user.ID, user.Name, req.Name, req.Email, req.Weight, req.Active); err != nil {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": err.Error()})
 		return
 	}
@@ -146,6 +149,7 @@ func (h *MemberHandler) DeleteMember(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
 	groupID, memberID := getMemberIDs(r)
 	if groupID == 0 || memberID == 0 {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": "Invalid group or member ID"})
@@ -153,13 +157,13 @@ func (h *MemberHandler) DeleteMember(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if user can modify group
-	canModify, err := h.groupUseCase.CanModifyGroup(groupID, user.ID, user.Role)
+	canModify, err := h.groupUseCase.CanModifyGroup(ctx, groupID, user.ID, user.Role)
 	if err != nil || !canModify {
 		respondJSON(w, http.StatusForbidden, map[string]string{"message": "Forbidden: You do not have permission to modify this group"})
 		return
 	}
 
-	if err := h.memberUseCase.DeleteMember(memberID, user.ID, user.Name); err != nil {
+	if err := h.memberUseCase.DeleteMember(ctx, memberID, user.ID, user.Name); err != nil {
 		respondJSON(w, http.StatusInternalServerError, map[string]string{"message": "Failed to delete member"})
 		return
 	}
@@ -169,13 +173,14 @@ func (h *MemberHandler) DeleteMember(w http.ResponseWriter, r *http.Request) {
 
 // GetMemberCapacity retrieves the capacity status of a member
 func (h *MemberHandler) GetMemberCapacity(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	memberID := getIDFromPath(r, "/api/v1/members/", "/capacity")
 	if memberID == 0 {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": "Invalid member ID"})
 		return
 	}
 
-	capacity, err := h.memberUseCase.GetMemberCapacity(memberID)
+	capacity, err := h.memberUseCase.GetMemberCapacity(ctx, memberID)
 	if err != nil {
 		respondJSON(w, http.StatusNotFound, map[string]string{"message": err.Error()})
 		return

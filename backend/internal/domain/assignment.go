@@ -1,6 +1,9 @@
 package domain
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 // AssignmentStatus represents the status of an assignment
 type AssignmentStatus string
@@ -49,10 +52,10 @@ type MemberDistribution struct {
 
 // AssignmentRepository defines the interface for assignment data access
 type AssignmentRepository interface {
-	Create(assignment *Assignment) error
-	GetByID(id int64) (*Assignment, error)
-	GetByGroupID(groupID int64, limit, offset int) ([]*AssignmentWithMember, error)
-	GetCountByGroupID(groupID int64) (int, error)
-	GetCountsByMemberIDs(memberIDs []int64) (map[int64]int, error)
-	UpdateStatus(id int64, status AssignmentStatus) error
+	Create(ctx context.Context, assignment *Assignment) error
+	GetByID(ctx context.Context, id int64) (*Assignment, error)
+	GetByGroupID(ctx context.Context, groupID int64, limit, offset int) ([]*AssignmentWithMember, error)
+	GetCountByGroupID(ctx context.Context, groupID int64) (int, error)
+	GetCountsByMemberIDs(ctx context.Context, memberIDs []int64) (map[int64]int, error)
+	UpdateStatus(ctx context.Context, id int64, status AssignmentStatus) error
 }

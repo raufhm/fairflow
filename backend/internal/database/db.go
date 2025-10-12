@@ -3,11 +3,12 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"log/slog"
 
+	"github.com/raufhm/fairflow/pkg/logger"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
+	"go.uber.org/zap"
 )
 
 // InitDB initializes the PostgreSQL database connection with Bun ORM
@@ -25,7 +26,7 @@ func InitDB(databaseURL string) (*bun.DB, error) {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
 
-	slog.Info("Database connection established", "note", "Migrations must be run separately with 'go run ./cmd/migrate up'")
+	logger.Log.Info("Database connection established", zap.String("note", "Migrations must be run separately with 'go run ./cmd/migrate up'"))
 
 	return db, nil
 }

@@ -1,6 +1,9 @@
 package domain
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 // APIKey represents an API key for authentication
 type APIKey struct {
@@ -16,10 +19,10 @@ type APIKey struct {
 
 // APIKeyRepository defines the interface for API key data access
 type APIKeyRepository interface {
-	Create(apiKey *APIKey) error
-	GetByID(id int64) (*APIKey, error)
-	GetByHash(hash string) (*APIKey, error)
-	GetByUserID(userID int64) ([]*APIKey, error)
-	Delete(id int64) error
-	UpdateLastUsed(id int64) error
+	Create(ctx context.Context, apiKey *APIKey) error
+	GetByID(ctx context.Context, id int64) (*APIKey, error)
+	GetByHash(ctx context.Context, hash string) (*APIKey, error)
+	GetByUserID(ctx context.Context, userID int64) ([]*APIKey, error)
+	Delete(ctx context.Context, id int64) error
+	UpdateLastUsed(ctx context.Context, id int64) error
 }

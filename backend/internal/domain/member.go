@@ -1,6 +1,9 @@
 package domain
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 // Member represents a group member who can be assigned
 type Member struct {
@@ -24,13 +27,13 @@ type Member struct {
 
 // MemberRepository defines the interface for member data access
 type MemberRepository interface {
-	Create(member *Member) error
-	GetByID(id int64) (*Member, error)
-	GetByGroupID(groupID int64) ([]*Member, error)
-	GetActiveByGroupID(groupID int64) ([]*Member, error)
-	Update(member *Member) error
-	Delete(id int64) error
-	IncrementOpenAssignments(memberID int64) error
-	DecrementOpenAssignments(memberID int64) error
-	GetDailyAssignmentCount(memberID int64) (int, error)
+	Create(ctx context.Context, member *Member) error
+	GetByID(ctx context.Context, id int64) (*Member, error)
+	GetByGroupID(ctx context.Context, groupID int64) ([]*Member, error)
+	GetActiveByGroupID(ctx context.Context, groupID int64) ([]*Member, error)
+	Update(ctx context.Context, member *Member) error
+	Delete(ctx context.Context, id int64) error
+	IncrementOpenAssignments(ctx context.Context, memberID int64) error
+	DecrementOpenAssignments(ctx context.Context, memberID int64) error
+	GetDailyAssignmentCount(ctx context.Context, memberID int64) (int, error)
 }

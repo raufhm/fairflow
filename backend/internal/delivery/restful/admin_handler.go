@@ -1,4 +1,4 @@
-package http
+package restful
 
 import (
 	"encoding/json"
@@ -24,7 +24,8 @@ type UpdateUserRoleRequest struct {
 
 // GetAllUsers retrieves all users
 func (h *AdminHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
-	users, err := h.adminUseCase.GetAllUsers()
+	ctx := r.Context()
+	users, err := h.adminUseCase.GetAllUsers(ctx)
 	if err != nil {
 		respondJSON(w, http.StatusInternalServerError, map[string]string{"message": "Failed to retrieve users"})
 		return
@@ -54,6 +55,7 @@ func (h *AdminHandler) UpdateUserRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
 	targetUserID := getIDFromPath(r, "/api/v1/admin/users/")
 	if targetUserID == 0 {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": "Invalid user ID"})
@@ -72,7 +74,7 @@ func (h *AdminHandler) UpdateUserRole(w http.ResponseWriter, r *http.Request) {
 	}
 
 	role := domain.UserRole(req.Role)
-	if err := h.adminUseCase.UpdateUserRole(targetUserID, user.ID, user.Name, role); err != nil {
+	if err := h.adminUseCase.UpdateUserRole(ctx, targetUserID, user.ID, user.Name, role); err != nil {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": err.Error()})
 		return
 	}
@@ -88,13 +90,14 @@ func (h *AdminHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
 	targetUserID := getIDFromPath(r, "/api/v1/admin/users/")
 	if targetUserID == 0 {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": "Invalid user ID"})
 		return
 	}
 
-	if err := h.adminUseCase.DeleteUser(targetUserID, user.ID, user.Name); err != nil {
+	if err := h.adminUseCase.DeleteUser(ctx, targetUserID, user.ID, user.Name); err != nil {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": err.Error()})
 		return
 	}
@@ -104,6 +107,7 @@ func (h *AdminHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 // GetAuditLogs retrieves audit logs
 func (h *AdminHandler) GetAuditLogs(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	limit := 100
 	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
 		if l, err := strconv.Atoi(limitStr); err == nil {
@@ -111,7 +115,7 @@ func (h *AdminHandler) GetAuditLogs(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	logs, err := h.adminUseCase.GetAuditLogs(limit)
+	logs, err := h.adminUseCase.GetAuditLogs(ctx, limit)
 	if err != nil {
 		respondJSON(w, http.StatusInternalServerError, map[string]string{"message": "Failed to retrieve audit logs"})
 		return

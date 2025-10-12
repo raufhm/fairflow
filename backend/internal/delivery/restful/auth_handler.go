@@ -1,4 +1,4 @@
-package http
+package restful
 
 import (
 	"encoding/json"
@@ -42,6 +42,7 @@ type CreateAPIKeyRequest struct {
 
 // Register handles user registration
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	var req RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": "Invalid request body"})
@@ -58,7 +59,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		role = domain.RoleUser
 	}
 
-	user, token, err := h.authUseCase.Register(req.Email, req.Password, req.Name, role)
+	user, token, err := h.authUseCase.Register(ctx, req.Email, req.Password, req.Name, role)
 	if err != nil {
 		if err == usecase.ErrEmailExists {
 			respondJSON(w, http.StatusConflict, map[string]string{"message": "Registration failed. Email may already be in use"})
@@ -81,6 +82,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 // Login handles user authentication
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	var req LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": "Invalid request body"})
@@ -92,7 +94,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, token, err := h.authUseCase.Login(req.Email, req.Password)
+	user, token, err := h.authUseCase.Login(ctx, req.Email, req.Password)
 	if err != nil {
 		if err == usecase.ErrInvalidCredentials {
 			respondJSON(w, http.StatusUnauthorized, map[string]string{"message": "Invalid email or password"})
@@ -128,13 +130,14 @@ func (h *AuthHandler) UpdateUserSettings(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	ctx := r.Context()
 	var req UpdateSettingsRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": "Invalid request body"})
 		return
 	}
 
-	updatedUser, err := h.authUseCase.UpdateUserSettings(user.ID, req.Name, req.CurrentPassword, req.NewPassword)
+	updatedUser, err := h.authUseCase.UpdateUserSettings(ctx, user.ID, req.Name, req.CurrentPassword, req.NewPassword)
 	if err != nil {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": err.Error()})
 		return
@@ -159,7 +162,8 @@ func (h *AuthHandler) GetAPIKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	keys, err := h.authUseCase.GetAPIKeys(user.ID)
+	ctx := r.Context()
+	keys, err := h.authUseCase.GetAPIKeys(ctx, user.ID)
 	if err != nil {
 		respondJSON(w, http.StatusInternalServerError, map[string]string{"message": "Failed to retrieve API keys"})
 		return
@@ -190,6 +194,7 @@ func (h *AuthHandler) CreateAPIKey(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
 	var req CreateAPIKeyRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": "Invalid request body"})
@@ -201,7 +206,7 @@ func (h *AuthHandler) CreateAPIKey(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rawKey, keyID, err := h.authUseCase.CreateAPIKey(user.ID, req.Name)
+	rawKey, keyID, err := h.authUseCase.CreateAPIKey(ctx, user.ID, req.Name)
 	if err != nil {
 		respondJSON(w, http.StatusInternalServerError, map[string]string{"message": "Failed to generate API key"})
 		return
@@ -221,13 +226,14 @@ func (h *AuthHandler) RevokeAPIKey(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
 	keyID := getIDFromPath(r, "/api/v1/auth/api-keys/")
 	if keyID == 0 {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": "Invalid key ID"})
 		return
 	}
 
-	if err := h.authUseCase.RevokeAPIKey(user.ID, keyID); err != nil {
+	if err := h.authUseCase.RevokeAPIKey(ctx, user.ID, keyID); err != nil {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": err.Error()})
 		return
 	}

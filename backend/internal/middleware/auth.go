@@ -3,7 +3,6 @@ package middleware
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"os"
 	"strings"
@@ -11,6 +10,8 @@ import (
 	"github.com/raufhm/fairflow/internal/domain"
 	"github.com/raufhm/fairflow/internal/usecase"
 	"github.com/raufhm/fairflow/pkg/crypto"
+	"github.com/raufhm/fairflow/pkg/logger"
+	"go.uber.org/zap"
 )
 
 type contextKey string
@@ -25,18 +26,18 @@ func AuthMiddleware(authUseCase *usecase.AuthUseCase, tokenService *crypto.Token
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Try JWT token first
 			authHeader := r.Header.Get("Authorization")
-			slog.Info("Auth attempt", "path", r.URL.Path, "authHeader", authHeader)
+			logger.Log.Info("Auth attempt", zap.String("path", r.URL.Path), zap.String("authHeader", authHeader))
 			fmt.Fprintf(os.Stdout, "AUTH MW: %s %s | Header: %s\n", r.Method, r.URL.Path, authHeader)
 			if authHeader != "" {
 				parts := strings.Split(authHeader, " ")
 				if len(parts) == 2 && parts[0] == "Bearer" {
 					userID, err := tokenService.VerifyToken(parts[1])
-					slog.Info("Token verification", "error", err, "userID", userID)
+					logger.Log.Info("Token verification", zap.Error(err), zap.Int64("userID", userID))
 					if err == nil {
-						user, err := authUseCase.GetUserByID(userID)
-						slog.Info("User lookup", "error", err, "user", user)
+						user, err := authUseCase.GetUserByID(r.Context(), userID)
+						logger.Log.Info("User lookup", zap.Error(err), zap.Any("user", user))
 						if err == nil && user != nil {
-							slog.Info("Auth success", "userRole", user.Role)
+							logger.Log.Info("Auth success", zap.String("userRole", string(user.Role)))
 							ctx := context.WithValue(r.Context(), UserContextKey, user)
 							next.ServeHTTP(w, r.WithContext(ctx))
 							return
@@ -48,7 +49,7 @@ func AuthMiddleware(authUseCase *usecase.AuthUseCase, tokenService *crypto.Token
 			// Try API key
 			apiKey := r.Header.Get("X-Api-Key")
 			if apiKey != "" {
-				user, err := authUseCase.VerifyAPIKey(apiKey)
+				user, err := authUseCase.VerifyAPIKey(r.Context(), apiKey)
 				if err == nil && user != nil {
 					ctx := context.WithValue(r.Context(), UserContextKey, user)
 					next.ServeHTTP(w, r.WithContext(ctx))
@@ -57,7 +58,7 @@ func AuthMiddleware(authUseCase *usecase.AuthUseCase, tokenService *crypto.Token
 			}
 
 			// No valid authentication
-			slog.Info("Auth failed - no valid credentials")
+			logger.Log.Info("Auth failed - no valid credentials")
 			http.Error(w, `{"message":"Authentication required"}`, http.StatusUnauthorized)
 		})
 	}

@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
@@ -22,7 +23,7 @@ func NewWebhookUseCase(webhookRepo domain.WebhookRepository, auditRepo domain.Au
 }
 
 // CreateWebhook creates a new webhook for a group
-func (uc *WebhookUseCase) CreateWebhook(userID, groupID int64, url string, events []string) (*domain.Webhook, error) {
+func (uc *WebhookUseCase) CreateWebhook(ctx context.Context, userID, groupID int64, url string, events []string) (*domain.Webhook, error) {
 	// Generate secret for webhook validation
 	secret, err := generateWebhookSecret()
 	if err != nil {
@@ -38,14 +39,14 @@ func (uc *WebhookUseCase) CreateWebhook(userID, groupID int64, url string, event
 		CreatedAt: time.Now(),
 	}
 
-	if err := uc.webhookRepo.Create(webhook); err != nil {
+	if err := uc.webhookRepo.Create(ctx, webhook); err != nil {
 		return nil, err
 	}
 
 	// Audit log
 	resourceType := "webhook"
 	details := fmt.Sprintf("Created webhook for group %d", groupID)
-	uc.auditRepo.Create(&domain.AuditLog{
+	uc.auditRepo.Create(ctx, &domain.AuditLog{
 		UserID:       &userID,
 		Action:       "webhook_created",
 		ResourceType: &resourceType,
@@ -58,20 +59,20 @@ func (uc *WebhookUseCase) CreateWebhook(userID, groupID int64, url string, event
 }
 
 // GetWebhooksByGroup returns all webhooks for a group
-func (uc *WebhookUseCase) GetWebhooksByGroup(groupID int64) ([]*domain.Webhook, error) {
-	return uc.webhookRepo.GetByGroupID(groupID)
+func (uc *WebhookUseCase) GetWebhooksByGroup(ctx context.Context, groupID int64) ([]*domain.Webhook, error) {
+	return uc.webhookRepo.GetByGroupID(ctx, groupID)
 }
 
 // UpdateWebhook updates a webhook
-func (uc *WebhookUseCase) UpdateWebhook(userID int64, webhook *domain.Webhook) error {
-	if err := uc.webhookRepo.Update(webhook); err != nil {
+func (uc *WebhookUseCase) UpdateWebhook(ctx context.Context, userID int64, webhook *domain.Webhook) error {
+	if err := uc.webhookRepo.Update(ctx, webhook); err != nil {
 		return err
 	}
 
 	// Audit log
 	resourceType := "webhook"
 	details := fmt.Sprintf("Updated webhook %d", webhook.ID)
-	uc.auditRepo.Create(&domain.AuditLog{
+	uc.auditRepo.Create(ctx, &domain.AuditLog{
 		UserID:       &userID,
 		Action:       "webhook_updated",
 		ResourceType: &resourceType,
@@ -84,15 +85,15 @@ func (uc *WebhookUseCase) UpdateWebhook(userID int64, webhook *domain.Webhook) e
 }
 
 // DeleteWebhook deletes a webhook
-func (uc *WebhookUseCase) DeleteWebhook(userID, webhookID int64) error {
-	if err := uc.webhookRepo.Delete(webhookID); err != nil {
+func (uc *WebhookUseCase) DeleteWebhook(ctx context.Context, userID, webhookID int64) error {
+	if err := uc.webhookRepo.Delete(ctx, webhookID); err != nil {
 		return err
 	}
 
 	// Audit log
 	resourceType := "webhook"
 	details := fmt.Sprintf("Deleted webhook %d", webhookID)
-	uc.auditRepo.Create(&domain.AuditLog{
+	uc.auditRepo.Create(ctx, &domain.AuditLog{
 		UserID:       &userID,
 		Action:       "webhook_deleted",
 		ResourceType: &resourceType,

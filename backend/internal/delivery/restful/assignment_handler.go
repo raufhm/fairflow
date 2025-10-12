@@ -1,4 +1,4 @@
-package http
+package restful
 
 import (
 	"encoding/json"
@@ -24,13 +24,14 @@ type RecordAssignmentRequest struct {
 
 // GetNextAssignee calculates the next assignee
 func (h *AssignmentHandler) GetNextAssignee(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	id := getIDFromPath(r, "/api/v1/groups/", "/next")
 	if id == 0 {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": "Invalid group ID"})
 		return
 	}
 
-	member, err := h.assignmentUseCase.CalculateNextAssignee(id)
+	member, err := h.assignmentUseCase.CalculateNextAssignee(ctx, id)
 	if err != nil {
 		respondJSON(w, http.StatusNotFound, map[string]string{"message": err.Error()})
 		return
@@ -50,6 +51,7 @@ func (h *AssignmentHandler) RecordAssignment(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	ctx := r.Context()
 	id := getIDFromPath(r, "/api/v1/groups/", "/assign")
 	if id == 0 {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": "Invalid group ID"})
@@ -62,7 +64,7 @@ func (h *AssignmentHandler) RecordAssignment(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	member, assignmentID, err := h.assignmentUseCase.RecordAssignment(id, user.ID, req.MemberID, req.Metadata)
+	member, assignmentID, err := h.assignmentUseCase.RecordAssignment(ctx, id, user.ID, req.MemberID, req.Metadata)
 	if err != nil {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": err.Error()})
 		return
@@ -77,6 +79,7 @@ func (h *AssignmentHandler) RecordAssignment(w http.ResponseWriter, r *http.Requ
 
 // GetAssignments retrieves assignment history for a group
 func (h *AssignmentHandler) GetAssignments(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	id := getIDFromPath(r, "/api/v1/groups/", "/assignments")
 	if id == 0 {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": "Invalid group ID"})
@@ -98,7 +101,7 @@ func (h *AssignmentHandler) GetAssignments(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
-	assignments, total, err := h.assignmentUseCase.GetAssignments(id, limit, offset)
+	assignments, total, err := h.assignmentUseCase.GetAssignments(ctx, id, limit, offset)
 	if err != nil {
 		respondJSON(w, http.StatusInternalServerError, map[string]string{"message": "Failed to retrieve assignments"})
 		return
@@ -115,13 +118,14 @@ func (h *AssignmentHandler) GetAssignments(w http.ResponseWriter, r *http.Reques
 
 // GetStats retrieves assignment statistics for a group
 func (h *AssignmentHandler) GetStats(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	id := getIDFromPath(r, "/api/v1/groups/", "/stats")
 	if id == 0 {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": "Invalid group ID"})
 		return
 	}
 
-	stats, err := h.assignmentUseCase.GetStats(id)
+	stats, err := h.assignmentUseCase.GetStats(ctx, id)
 	if err != nil {
 		respondJSON(w, http.StatusInternalServerError, map[string]string{"message": "Failed to retrieve statistics"})
 		return
@@ -138,13 +142,14 @@ func (h *AssignmentHandler) CompleteAssignment(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	ctx := r.Context()
 	id := getIDFromPath(r, "/api/v1/assignments/", "/complete")
 	if id == 0 {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": "Invalid assignment ID"})
 		return
 	}
 
-	if err := h.assignmentUseCase.CompleteAssignment(id); err != nil {
+	if err := h.assignmentUseCase.CompleteAssignment(ctx, id); err != nil {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": err.Error()})
 		return
 	}
@@ -163,13 +168,14 @@ func (h *AssignmentHandler) CancelAssignment(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	ctx := r.Context()
 	id := getIDFromPath(r, "/api/v1/assignments/", "/cancel")
 	if id == 0 {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": "Invalid assignment ID"})
 		return
 	}
 
-	if err := h.assignmentUseCase.CancelAssignment(id); err != nil {
+	if err := h.assignmentUseCase.CancelAssignment(ctx, id); err != nil {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": err.Error()})
 		return
 	}

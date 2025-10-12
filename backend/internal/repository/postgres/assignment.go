@@ -17,8 +17,7 @@ func NewAssignmentRepository(db *bun.DB) domain.AssignmentRepository {
 	return &assignmentRepository{db: db}
 }
 
-func (r *assignmentRepository) Create(assignment *domain.Assignment) error {
-	ctx := context.Background()
+func (r *assignmentRepository) Create(ctx context.Context, assignment *domain.Assignment) error {
 	assignment.CreatedAt = time.Now()
 	// Set default status to open if not specified
 	if assignment.Status == "" {
@@ -28,8 +27,7 @@ func (r *assignmentRepository) Create(assignment *domain.Assignment) error {
 	return err
 }
 
-func (r *assignmentRepository) GetByID(id int64) (*domain.Assignment, error) {
-	ctx := context.Background()
+func (r *assignmentRepository) GetByID(ctx context.Context, id int64) (*domain.Assignment, error) {
 	assignment := &domain.Assignment{}
 	err := r.db.NewSelect().Model(assignment).Where("id = ?", id).Scan(ctx)
 	if err != nil {
@@ -38,8 +36,7 @@ func (r *assignmentRepository) GetByID(id int64) (*domain.Assignment, error) {
 	return assignment, nil
 }
 
-func (r *assignmentRepository) UpdateStatus(id int64, status domain.AssignmentStatus) error {
-	ctx := context.Background()
+func (r *assignmentRepository) UpdateStatus(ctx context.Context, id int64, status domain.AssignmentStatus) error {
 	now := time.Now()
 	update := r.db.NewUpdate().
 		Model(&domain.Assignment{}).
@@ -55,8 +52,7 @@ func (r *assignmentRepository) UpdateStatus(id int64, status domain.AssignmentSt
 	return err
 }
 
-func (r *assignmentRepository) GetByGroupID(groupID int64, limit, offset int) ([]*domain.AssignmentWithMember, error) {
-	ctx := context.Background()
+func (r *assignmentRepository) GetByGroupID(ctx context.Context, groupID int64, limit, offset int) ([]*domain.AssignmentWithMember, error) {
 	var assignments []*domain.AssignmentWithMember
 	err := r.db.NewSelect().
 		ColumnExpr("a.id, a.metadata, a.created_at, m.id as member_id, m.name as member_name").
@@ -70,8 +66,7 @@ func (r *assignmentRepository) GetByGroupID(groupID int64, limit, offset int) ([
 	return assignments, err
 }
 
-func (r *assignmentRepository) GetCountByGroupID(groupID int64) (int, error) {
-	ctx := context.Background()
+func (r *assignmentRepository) GetCountByGroupID(ctx context.Context, groupID int64) (int, error) {
 	count, err := r.db.NewSelect().
 		Model(&domain.Assignment{}).
 		Where("group_id = ?", groupID).
@@ -79,12 +74,11 @@ func (r *assignmentRepository) GetCountByGroupID(groupID int64) (int, error) {
 	return count, err
 }
 
-func (r *assignmentRepository) GetCountsByMemberIDs(memberIDs []int64) (map[int64]int, error) {
+func (r *assignmentRepository) GetCountsByMemberIDs(ctx context.Context, memberIDs []int64) (map[int64]int, error) {
 	if len(memberIDs) == 0 {
 		return make(map[int64]int), nil
 	}
 
-	ctx := context.Background()
 	var results []struct {
 		MemberID int64 `bun:"member_id"`
 		Count    int   `bun:"count"`

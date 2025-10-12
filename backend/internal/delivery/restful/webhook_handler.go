@@ -1,4 +1,4 @@
-package http
+package restful
 
 import (
 	"encoding/json"
@@ -26,6 +26,7 @@ func (h *WebhookHandler) CreateWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
 	groupID, err := strconv.ParseInt(chi.URLParam(r, "groupId"), 10, 64)
 	if err != nil {
 		http.Error(w, `{"message":"Invalid group ID"}`, http.StatusBadRequest)
@@ -42,7 +43,7 @@ func (h *WebhookHandler) CreateWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	webhook, err := h.webhookUseCase.CreateWebhook(user.ID, groupID, req.URL, req.Events)
+	webhook, err := h.webhookUseCase.CreateWebhook(ctx, user.ID, groupID, req.URL, req.Events)
 	if err != nil {
 		http.Error(w, `{"message":"Failed to create webhook"}`, http.StatusInternalServerError)
 		return
@@ -61,13 +62,14 @@ func (h *WebhookHandler) GetWebhooks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
 	groupID, err := strconv.ParseInt(chi.URLParam(r, "groupId"), 10, 64)
 	if err != nil {
 		http.Error(w, `{"message":"Invalid group ID"}`, http.StatusBadRequest)
 		return
 	}
 
-	webhooks, err := h.webhookUseCase.GetWebhooksByGroup(groupID)
+	webhooks, err := h.webhookUseCase.GetWebhooksByGroup(ctx, groupID)
 	if err != nil {
 		http.Error(w, `{"message":"Failed to fetch webhooks"}`, http.StatusInternalServerError)
 		return
@@ -85,13 +87,14 @@ func (h *WebhookHandler) DeleteWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
 	webhookID, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
 		http.Error(w, `{"message":"Invalid webhook ID"}`, http.StatusBadRequest)
 		return
 	}
 
-	if err := h.webhookUseCase.DeleteWebhook(user.ID, webhookID); err != nil {
+	if err := h.webhookUseCase.DeleteWebhook(ctx, user.ID, webhookID); err != nil {
 		http.Error(w, `{"message":"Failed to delete webhook"}`, http.StatusInternalServerError)
 		return
 	}

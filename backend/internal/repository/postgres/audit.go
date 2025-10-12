@@ -17,15 +17,13 @@ func NewAuditLogRepository(db *bun.DB) domain.AuditLogRepository {
 	return &auditLogRepository{db: db}
 }
 
-func (r *auditLogRepository) Create(log *domain.AuditLog) error {
-	ctx := context.Background()
+func (r *auditLogRepository) Create(ctx context.Context, log *domain.AuditLog) error {
 	log.CreatedAt = time.Now()
 	_, err := r.db.NewInsert().Model(log).Exec(ctx)
 	return err
 }
 
-func (r *auditLogRepository) GetRecent(limit int) ([]*domain.AuditLog, error) {
-	ctx := context.Background()
+func (r *auditLogRepository) GetRecent(ctx context.Context, limit int) ([]*domain.AuditLog, error) {
 	var logs []*domain.AuditLog
 	err := r.db.NewSelect().
 		Model(&logs).

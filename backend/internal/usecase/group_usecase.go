@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -27,7 +28,7 @@ func NewGroupUseCase(
 }
 
 // CreateGroup creates a new group
-func (uc *GroupUseCase) CreateGroup(userID int64, userName, name string, description *string, strategy domain.AssignmentStrategy) (*domain.Group, error) {
+func (uc *GroupUseCase) CreateGroup(ctx context.Context, userID int64, userName, name string, description *string, strategy domain.AssignmentStrategy) (*domain.Group, error) {
 	group := &domain.Group{
 		UserID:      userID,
 		Name:        name,
@@ -36,12 +37,12 @@ func (uc *GroupUseCase) CreateGroup(userID int64, userName, name string, descrip
 		Active:      true,
 	}
 
-	if err := uc.groupRepo.Create(group); err != nil {
+	if err := uc.groupRepo.Create(ctx, group); err != nil {
 		return nil, err
 	}
 
 	// Audit log
-	_ = uc.auditRepo.Create(&domain.AuditLog{
+	_ = uc.auditRepo.Create(ctx, &domain.AuditLog{
 		UserID:       &userID,
 		UserName:     userName,
 		Action:       "Group created",
@@ -55,23 +56,23 @@ func (uc *GroupUseCase) CreateGroup(userID int64, userName, name string, descrip
 }
 
 // GetGroup retrieves a group by ID
-func (uc *GroupUseCase) GetGroup(id int64) (*domain.Group, error) {
-	return uc.groupRepo.GetByID(id)
+func (uc *GroupUseCase) GetGroup(ctx context.Context, id int64) (*domain.Group, error) {
+	return uc.groupRepo.GetByID(ctx, id)
 }
 
 // GetAllGroups retrieves all groups
-func (uc *GroupUseCase) GetAllGroups() ([]*domain.Group, error) {
-	return uc.groupRepo.GetAll()
+func (uc *GroupUseCase) GetAllGroups(ctx context.Context) ([]*domain.Group, error) {
+	return uc.groupRepo.GetAll(ctx)
 }
 
 // GetUserGroups retrieves groups belonging to a user
-func (uc *GroupUseCase) GetUserGroups(userID int64) ([]*domain.Group, error) {
-	return uc.groupRepo.GetByUserID(userID)
+func (uc *GroupUseCase) GetUserGroups(ctx context.Context, userID int64) ([]*domain.Group, error) {
+	return uc.groupRepo.GetByUserID(ctx, userID)
 }
 
 // UpdateGroup updates a group
-func (uc *GroupUseCase) UpdateGroup(id, userID int64, userName string, name *string, description *string, active *bool) (*domain.Group, error) {
-	group, err := uc.groupRepo.GetByID(id)
+func (uc *GroupUseCase) UpdateGroup(ctx context.Context, id, userID int64, userName string, name *string, description *string, active *bool) (*domain.Group, error) {
+	group, err := uc.groupRepo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -97,12 +98,12 @@ func (uc *GroupUseCase) UpdateGroup(id, userID int64, userName string, name *str
 		return nil, errors.New("no valid fields provided for update")
 	}
 
-	if err := uc.groupRepo.Update(group); err != nil {
+	if err := uc.groupRepo.Update(ctx, group); err != nil {
 		return nil, err
 	}
 
 	// Audit log
-	_ = uc.auditRepo.Create(&domain.AuditLog{
+	_ = uc.auditRepo.Create(ctx, &domain.AuditLog{
 		UserID:       &userID,
 		UserName:     userName,
 		Action:       "Group updated",
@@ -116,8 +117,8 @@ func (uc *GroupUseCase) UpdateGroup(id, userID int64, userName string, name *str
 }
 
 // DeleteGroup deletes a group
-func (uc *GroupUseCase) DeleteGroup(id, userID int64, userName string) error {
-	group, err := uc.groupRepo.GetByID(id)
+func (uc *GroupUseCase) DeleteGroup(ctx context.Context, id, userID int64, userName string) error {
+	group, err := uc.groupRepo.GetByID(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -125,12 +126,12 @@ func (uc *GroupUseCase) DeleteGroup(id, userID int64, userName string) error {
 		return errors.New("group not found")
 	}
 
-	if err := uc.groupRepo.Delete(id); err != nil {
+	if err := uc.groupRepo.Delete(ctx, id); err != nil {
 		return err
 	}
 
 	// Audit log
-	_ = uc.auditRepo.Create(&domain.AuditLog{
+	_ = uc.auditRepo.Create(ctx, &domain.AuditLog{
 		UserID:       &userID,
 		UserName:     userName,
 		Action:       "Group deleted",
@@ -144,8 +145,8 @@ func (uc *GroupUseCase) DeleteGroup(id, userID int64, userName string) error {
 }
 
 // CanModifyGroup checks if a user can modify a group
-func (uc *GroupUseCase) CanModifyGroup(groupID, userID int64, userRole domain.UserRole) (bool, error) {
-	group, err := uc.groupRepo.GetByID(groupID)
+func (uc *GroupUseCase) CanModifyGroup(ctx context.Context, groupID, userID int64, userRole domain.UserRole) (bool, error) {
+	group, err := uc.groupRepo.GetByID(ctx, groupID)
 	if err != nil {
 		return false, err
 	}
@@ -161,8 +162,8 @@ func (uc *GroupUseCase) CanModifyGroup(groupID, userID int64, userRole domain.Us
 }
 
 // PauseGroup pauses assignments for a group
-func (uc *GroupUseCase) PauseGroup(groupID, userID int64, userName string, reason *string) error {
-	group, err := uc.groupRepo.GetByID(groupID)
+func (uc *GroupUseCase) PauseGroup(ctx context.Context, groupID, userID int64, userName string, reason *string) error {
+	group, err := uc.groupRepo.GetByID(ctx, groupID)
 	if err != nil {
 		return err
 	}
@@ -181,7 +182,7 @@ func (uc *GroupUseCase) PauseGroup(groupID, userID int64, userName string, reaso
 	group.PausedAt = &now
 	group.PausedBy = &userID
 
-	if err := uc.groupRepo.Update(group); err != nil {
+	if err := uc.groupRepo.Update(ctx, group); err != nil {
 		return err
 	}
 
@@ -190,7 +191,7 @@ func (uc *GroupUseCase) PauseGroup(groupID, userID int64, userName string, reaso
 	if reason != nil {
 		reasonStr = *reason
 	}
-	_ = uc.auditRepo.Create(&domain.AuditLog{
+	_ = uc.auditRepo.Create(ctx, &domain.AuditLog{
 		UserID:       &userID,
 		UserName:     userName,
 		Action:       "Group assignments paused",
@@ -204,8 +205,8 @@ func (uc *GroupUseCase) PauseGroup(groupID, userID int64, userName string, reaso
 }
 
 // ResumeGroup resumes assignments for a group
-func (uc *GroupUseCase) ResumeGroup(groupID, userID int64, userName string) error {
-	group, err := uc.groupRepo.GetByID(groupID)
+func (uc *GroupUseCase) ResumeGroup(ctx context.Context, groupID, userID int64, userName string) error {
+	group, err := uc.groupRepo.GetByID(ctx, groupID)
 	if err != nil {
 		return err
 	}
@@ -223,12 +224,12 @@ func (uc *GroupUseCase) ResumeGroup(groupID, userID int64, userName string) erro
 	group.PausedAt = nil
 	group.PausedBy = nil
 
-	if err := uc.groupRepo.Update(group); err != nil {
+	if err := uc.groupRepo.Update(ctx, group); err != nil {
 		return err
 	}
 
 	// Audit log
-	_ = uc.auditRepo.Create(&domain.AuditLog{
+	_ = uc.auditRepo.Create(ctx, &domain.AuditLog{
 		UserID:       &userID,
 		UserName:     userName,
 		Action:       "Group assignments resumed",

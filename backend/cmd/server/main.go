@@ -1,40 +1,45 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
-	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/raufhm/fairflow/internal/config"
 	"github.com/raufhm/fairflow/internal/database"
-	httpdelivery "github.com/raufhm/fairflow/internal/delivery/http"
+	"github.com/raufhm/fairflow/internal/delivery/restful"
 	"github.com/raufhm/fairflow/internal/domain"
 	"github.com/raufhm/fairflow/internal/repository/postgres"
 	"github.com/raufhm/fairflow/internal/usecase"
 	"github.com/raufhm/fairflow/pkg/crypto"
+	"github.com/raufhm/fairflow/pkg/logger"
 	"github.com/uptrace/bun"
+	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
 
 func main() {
-	// Initialize slog to output to stdout
-	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stdout, nil)))
+	// Initialize zap logger
+	defer logger.Log.Sync() // flushes buffer, if any
 
 	// Load configuration
 	cfg := config.Load()
 
-	slog.Info("Starting FairFlow API", "environment", cfg.Environment, "port", cfg.Port)
+	logger.Log.Info("Starting FairFlow API", zap.String("environment", cfg.Environment), zap.Int("port", cfg.Port))
 
 	// Initialize database
 	db, err := database.InitDB(cfg.DatabaseURL)
 	if err != nil {
-		log.Fatalf("Failed to initialize database: %v", err)
+		logger.Log.Fatal("Failed to initialize database", zap.Error(err))
 	}
 	defer db.Close()
 
-	slog.Info("Database connected successfully")
+	logger.Log.Info("Database connected successfully")
 
 	// Seed initial admin user if needed
 	if err := seedAdminUser(db, cfg); err != nil {
@@ -59,19 +64,19 @@ func main() {
 	webhookUseCase := usecase.NewWebhookUseCase(webhookRepo, auditRepo)
 
 	// Initialize handlers
-	authHandler := httpdelivery.NewAuthHandler(authUseCase)
-	groupHandler := httpdelivery.NewGroupHandler(groupUseCase)
-	memberHandler := httpdelivery.NewMemberHandler(memberUseCase, groupUseCase)
-	assignmentHandler := httpdelivery.NewAssignmentHandler(assignmentUseCase)
-	adminHandler := httpdelivery.NewAdminHandler(adminUseCase)
-	webhookHandler := httpdelivery.NewWebhookHandler(webhookUseCase)
-	analyticsHandler := httpdelivery.NewAnalyticsHandler(assignmentUseCase, memberUseCase, groupUseCase)
+	authHandler := restful.NewAuthHandler(authUseCase)
+	groupHandler := restful.NewGroupHandler(groupUseCase)
+	memberHandler := restful.NewMemberHandler(memberUseCase, groupUseCase)
+	assignmentHandler := restful.NewAssignmentHandler(assignmentUseCase)
+	adminHandler := restful.NewAdminHandler(adminUseCase)
+	webhookHandler := restful.NewWebhookHandler(webhookUseCase)
+	analyticsHandler := restful.NewAnalyticsHandler(assignmentUseCase, memberUseCase, groupUseCase)
 
 	// Initialize token service
 	tokenService := crypto.NewTokenService(cfg.JWTSecret)
 
 	// Setup router
-	router := httpdelivery.NewRouter(
+	router := restful.NewRouter(
 		authHandler,
 		groupHandler,
 		memberHandler,
@@ -87,17 +92,43 @@ func main() {
 
 	// Start server
 	addr := fmt.Sprintf(":%d", cfg.Port)
-	slog.Info("Server is running on http://localhost" + addr)
-	if err := http.ListenAndServe(addr, handler); err != nil {
-		log.Fatalf("Server failed to start: %v", err)
+	srv := &http.Server{
+		Addr:    addr,
+		Handler: handler,
 	}
+
+	go func() {
+		logger.Log.Info("Server is running on " + addr)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logger.Log.Fatal("Server failed to start", zap.Error(err))
+		}
+	}()
+
+	// Wait for interrupt signal to gracefully shutdown the server with
+	// a timeout of 5 seconds.
+	quit := make(chan os.Signal, 1)
+	// kill (no param) default send syscall.SIGTERM
+	// kill -2 is syscall.SIGINT
+	// kill -9 is syscall.SIGKILL but can't be caught, so don't need to add it
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	logger.Log.Info("Shutting down server...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		logger.Log.Fatal("Server forced to shutdown:", zap.Error(err))
+	}
+
+	logger.Log.Info("Server exiting")
 }
 
 func seedAdminUser(db *bun.DB, cfg *config.Config) error {
+	ctx := context.Background()
 	userRepo := postgres.NewUserRepository(db)
 
 	// Check if any super_admin exists
-	users, err := userRepo.GetAll()
+	users, err := userRepo.GetAll(ctx)
 	if err != nil {
 		return err
 	}
@@ -124,7 +155,7 @@ func seedAdminUser(db *bun.DB, cfg *config.Config) error {
 			Role:         domain.RoleSuperAdmin,
 		}
 
-		if err := userRepo.Create(admin); err != nil {
+		if err := userRepo.Create(ctx, admin); err != nil {
 			return err
 		}
 

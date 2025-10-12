@@ -1,6 +1,7 @@
 package postgres_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -29,7 +30,7 @@ func TestAuditLogRepository_Create(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(1)
 	mock.ExpectQuery(`INSERT INTO "audit_logs"`).WillReturnRows(rows)
 
-	err = auditRepo.Create(log)
+	err = auditRepo.Create(context.Background(), log)
 
 	assert.NoError(t, err)
 }
@@ -45,7 +46,7 @@ func TestAuditLogRepository_GetRecent(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(1)
 	mock.ExpectQuery(`SELECT (.+) FROM "audit_logs"`).WillReturnRows(rows)
 
-	_, err = auditRepo.GetRecent(1)
+	_, err = auditRepo.GetRecent(context.Background(), 1)
 
 	assert.NoError(t, err)
 }

@@ -1,6 +1,7 @@
 package postgres_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -28,7 +29,7 @@ func TestUserRepository_Create(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(1)
 	mock.ExpectQuery(`INSERT INTO "users"`).WillReturnRows(rows)
 
-	err = userRepo.Create(user)
+	err = userRepo.Create(context.Background(), user)
 
 	assert.NoError(t, err)
 }
@@ -44,7 +45,7 @@ func TestUserRepository_GetByID(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(1)
 	mock.ExpectQuery(`SELECT (.+) FROM "users"`).WillReturnRows(rows)
 
-	_, err = userRepo.GetByID(1)
+	_, err = userRepo.GetByID(context.Background(), 1)
 
 	assert.NoError(t, err)
 }
@@ -60,7 +61,7 @@ func TestUserRepository_GetByEmail(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(1)
 	mock.ExpectQuery(`SELECT (.+) FROM "users"`).WillReturnRows(rows)
 
-	_, err = userRepo.GetByEmail("test@example.com")
+	_, err = userRepo.GetByEmail(context.Background(), "test@example.com")
 
 	assert.NoError(t, err)
 }
@@ -76,7 +77,7 @@ func TestUserRepository_GetAll(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(1)
 	mock.ExpectQuery(`SELECT (.+) FROM "users"`).WillReturnRows(rows)
 
-	_, err = userRepo.GetAll()
+	_, err = userRepo.GetAll(context.Background())
 
 	assert.NoError(t, err)
 }
@@ -98,7 +99,7 @@ func TestUserRepository_Update(t *testing.T) {
 
 	mock.ExpectExec(`UPDATE "users"`).WillReturnResult(sqlmock.NewResult(1, 1))
 
-	err = userRepo.Update(user)
+	err = userRepo.Update(context.Background(), user)
 
 	assert.NoError(t, err)
 }
@@ -113,7 +114,7 @@ func TestUserRepository_Delete(t *testing.T) {
 
 	mock.ExpectExec(`DELETE FROM "users"`).WillReturnResult(sqlmock.NewResult(1, 1))
 
-	err = userRepo.Delete(1)
+	err = userRepo.Delete(context.Background(), 1)
 
 	assert.NoError(t, err)
 }
@@ -128,7 +129,7 @@ func TestUserRepository_UpdateRole(t *testing.T) {
 
 	mock.ExpectExec(`UPDATE "users"`).WillReturnResult(sqlmock.NewResult(1, 1))
 
-	err = userRepo.UpdateRole(1, domain.RoleAdmin)
+	err = userRepo.UpdateRole(context.Background(), 1, domain.RoleAdmin)
 
 	assert.NoError(t, err)
 }
