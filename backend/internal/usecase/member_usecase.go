@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -26,7 +27,7 @@ func NewMemberUseCase(
 }
 
 // CreateMember creates a new member in a group
-func (uc *MemberUseCase) CreateMember(groupID, userID int64, userName, name string, email *string, weight int) (*domain.Member, error) {
+func (uc *MemberUseCase) CreateMember(ctx context.Context, groupID, userID int64, userName, name string, email *string, weight int) (*domain.Member, error) {
 	member := &domain.Member{
 		GroupID: groupID,
 		Name:    name,
@@ -35,18 +36,18 @@ func (uc *MemberUseCase) CreateMember(groupID, userID int64, userName, name stri
 		Active:  true,
 	}
 
-	if err := uc.memberRepo.Create(member); err != nil {
+	if err := uc.memberRepo.Create(ctx, member); err != nil {
 		return nil, err
 	}
 
 	// Audit log
-	group, _ := uc.groupRepo.GetByID(groupID)
+	group, _ := uc.groupRepo.GetByID(ctx, groupID)
 	groupName := "unknown"
 	if group != nil {
 		groupName = group.Name
 	}
 
-	_ = uc.auditRepo.Create(&domain.AuditLog{
+	_ = uc.auditRepo.Create(ctx, &domain.AuditLog{
 		UserID:       &userID,
 		UserName:     userName,
 		Action:       "Member added",
@@ -60,18 +61,18 @@ func (uc *MemberUseCase) CreateMember(groupID, userID int64, userName, name stri
 }
 
 // GetMembers retrieves all members of a group
-func (uc *MemberUseCase) GetMembers(groupID int64) ([]*domain.Member, error) {
-	return uc.memberRepo.GetByGroupID(groupID)
+func (uc *MemberUseCase) GetMembers(ctx context.Context, groupID int64) ([]*domain.Member, error) {
+	return uc.memberRepo.GetByGroupID(ctx, groupID)
 }
 
 // GetMember retrieves a member by ID
-func (uc *MemberUseCase) GetMember(id int64) (*domain.Member, error) {
-	return uc.memberRepo.GetByID(id)
+func (uc *MemberUseCase) GetMember(ctx context.Context, id int64) (*domain.Member, error) {
+	return uc.memberRepo.GetByID(ctx, id)
 }
 
 // UpdateMember updates a member
-func (uc *MemberUseCase) UpdateMember(id, userID int64, userName string, name *string, email *string, weight *int, active *bool) error {
-	member, err := uc.memberRepo.GetByID(id)
+func (uc *MemberUseCase) UpdateMember(ctx context.Context, id, userID int64, userName string, name *string, email *string, weight *int, active *bool) error {
+	member, err := uc.memberRepo.GetByID(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -101,18 +102,18 @@ func (uc *MemberUseCase) UpdateMember(id, userID int64, userName string, name *s
 		return errors.New("no valid fields provided for update")
 	}
 
-	if err := uc.memberRepo.Update(member); err != nil {
+	if err := uc.memberRepo.Update(ctx, member); err != nil {
 		return err
 	}
 
 	// Audit log
-	group, _ := uc.groupRepo.GetByID(member.GroupID)
+	group, _ := uc.groupRepo.GetByID(ctx, member.GroupID)
 	groupName := "unknown"
 	if group != nil {
 		groupName = group.Name
 	}
 
-	_ = uc.auditRepo.Create(&domain.AuditLog{
+	_ = uc.auditRepo.Create(ctx, &domain.AuditLog{
 		UserID:       &userID,
 		UserName:     userName,
 		Action:       "Member updated",
@@ -126,8 +127,8 @@ func (uc *MemberUseCase) UpdateMember(id, userID int64, userName string, name *s
 }
 
 // DeleteMember deletes a member
-func (uc *MemberUseCase) DeleteMember(id, userID int64, userName string) error {
-	member, err := uc.memberRepo.GetByID(id)
+func (uc *MemberUseCase) DeleteMember(ctx context.Context, id, userID int64, userName string) error {
+	member, err := uc.memberRepo.GetByID(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -137,18 +138,18 @@ func (uc *MemberUseCase) DeleteMember(id, userID int64, userName string) error {
 
 	groupID := member.GroupID
 
-	if err := uc.memberRepo.Delete(id); err != nil {
+	if err := uc.memberRepo.Delete(ctx, id); err != nil {
 		return err
 	}
 
 	// Audit log
-	group, _ := uc.groupRepo.GetByID(groupID)
+	group, _ := uc.groupRepo.GetByID(ctx, groupID)
 	groupName := "unknown"
 	if group != nil {
 		groupName = group.Name
 	}
 
-	_ = uc.auditRepo.Create(&domain.AuditLog{
+	_ = uc.auditRepo.Create(ctx, &domain.AuditLog{
 		UserID:       &userID,
 		UserName:     userName,
 		Action:       "Member removed",
@@ -175,8 +176,8 @@ type CapacityStatus struct {
 }
 
 // GetMemberCapacity returns the capacity status of a member
-func (uc *MemberUseCase) GetMemberCapacity(memberID int64) (*CapacityStatus, error) {
-	member, err := uc.memberRepo.GetByID(memberID)
+func (uc *MemberUseCase) GetMemberCapacity(ctx context.Context, memberID int64) (*CapacityStatus, error) {
+	member, err := uc.memberRepo.GetByID(ctx, memberID)
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +186,7 @@ func (uc *MemberUseCase) GetMemberCapacity(memberID int64) (*CapacityStatus, err
 	}
 
 	// Get daily assignment count
-	dailyCount, err := uc.memberRepo.GetDailyAssignmentCount(memberID)
+	dailyCount, err := uc.memberRepo.GetDailyAssignmentCount(ctx, memberID)
 	if err != nil {
 		return nil, err
 	}

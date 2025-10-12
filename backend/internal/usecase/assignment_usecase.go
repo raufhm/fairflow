@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math"
@@ -30,9 +31,9 @@ func NewAssignmentUseCase(
 }
 
 // CalculateNextAssignee calculates the next assignee using weighted round robin
-func (uc *AssignmentUseCase) CalculateNextAssignee(groupID int64) (*domain.Member, error) {
+func (uc *AssignmentUseCase) CalculateNextAssignee(ctx context.Context, groupID int64) (*domain.Member, error) {
 	// Check if group is paused
-	group, err := uc.groupRepo.GetByID(groupID)
+	group, err := uc.groupRepo.GetByID(ctx, groupID)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +45,7 @@ func (uc *AssignmentUseCase) CalculateNextAssignee(groupID int64) (*domain.Membe
 	}
 
 	// Get active members
-	members, err := uc.memberRepo.GetActiveByGroupID(groupID)
+	members, err := uc.memberRepo.GetActiveByGroupID(ctx, groupID)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +63,7 @@ func (uc *AssignmentUseCase) CalculateNextAssignee(groupID int64) (*domain.Membe
 
 		// Check daily assignment limit
 		if member.MaxDailyAssignments != nil {
-			dailyCount, err := uc.memberRepo.GetDailyAssignmentCount(member.ID)
+			dailyCount, err := uc.memberRepo.GetDailyAssignmentCount(ctx, member.ID)
 			if err != nil {
 				continue // Skip on error, don't break the whole flow
 			}
@@ -85,7 +86,7 @@ func (uc *AssignmentUseCase) CalculateNextAssignee(groupID int64) (*domain.Membe
 	}
 
 	// Get assignment counts
-	counts, err := uc.assignmentRepo.GetCountsByMemberIDs(memberIDs)
+	counts, err := uc.assignmentRepo.GetCountsByMemberIDs(ctx, memberIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -115,19 +116,19 @@ func (uc *AssignmentUseCase) CalculateNextAssignee(groupID int64) (*domain.Membe
 }
 
 // RecordAssignment creates a new assignment record
-func (uc *AssignmentUseCase) RecordAssignment(groupID, userID int64, memberID *int64, metadata *string) (*domain.Member, int64, error) {
+func (uc *AssignmentUseCase) RecordAssignment(ctx context.Context, groupID, userID int64, memberID *int64, metadata *string) (*domain.Member, int64, error) {
 	var assignedMember *domain.Member
 	var err error
 
 	if memberID == nil {
 		// Automatically determine next assignee
-		assignedMember, err = uc.CalculateNextAssignee(groupID)
+		assignedMember, err = uc.CalculateNextAssignee(ctx, groupID)
 		if err != nil {
 			return nil, 0, err
 		}
 	} else {
 		// Validate provided member ID
-		assignedMember, err = uc.memberRepo.GetByID(*memberID)
+		assignedMember, err = uc.memberRepo.GetByID(ctx, *memberID)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -143,20 +144,20 @@ func (uc *AssignmentUseCase) RecordAssignment(groupID, userID int64, memberID *i
 		Metadata: metadata,
 	}
 
-	if err := uc.assignmentRepo.Create(assignment); err != nil {
+	if err := uc.assignmentRepo.Create(ctx, assignment); err != nil {
 		return nil, 0, err
 	}
 
 	// Increment open assignments count
-	if err := uc.memberRepo.IncrementOpenAssignments(assignedMember.ID); err != nil {
+	if err := uc.memberRepo.IncrementOpenAssignments(ctx, assignedMember.ID); err != nil {
 		// Log error but don't fail the assignment
 		// TODO: Add proper logging
 	}
 
 	// Audit log
-	group, _ := uc.groupRepo.GetByID(groupID)
+	group, _ := uc.groupRepo.GetByID(ctx, groupID)
 	if group != nil {
-		_ = uc.auditRepo.Create(&domain.AuditLog{
+		_ = uc.auditRepo.Create(ctx, &domain.AuditLog{
 			UserID:       &userID,
 			UserName:     "system", // Should be passed from context
 			Action:       "Assignment recorded",
@@ -171,13 +172,13 @@ func (uc *AssignmentUseCase) RecordAssignment(groupID, userID int64, memberID *i
 }
 
 // GetAssignments retrieves assignments for a group with pagination
-func (uc *AssignmentUseCase) GetAssignments(groupID int64, limit, offset int) ([]*domain.AssignmentWithMember, int, error) {
-	assignments, err := uc.assignmentRepo.GetByGroupID(groupID, limit, offset)
+func (uc *AssignmentUseCase) GetAssignments(ctx context.Context, groupID int64, limit, offset int) ([]*domain.AssignmentWithMember, int, error) {
+	assignments, err := uc.assignmentRepo.GetByGroupID(ctx, groupID, limit, offset)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	total, err := uc.assignmentRepo.GetCountByGroupID(groupID)
+	total, err := uc.assignmentRepo.GetCountByGroupID(ctx, groupID)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -186,15 +187,15 @@ func (uc *AssignmentUseCase) GetAssignments(groupID int64, limit, offset int) ([
 }
 
 // GetStats calculates assignment statistics for a group
-func (uc *AssignmentUseCase) GetStats(groupID int64) (*domain.AssignmentStats, error) {
+func (uc *AssignmentUseCase) GetStats(ctx context.Context, groupID int64) (*domain.AssignmentStats, error) {
 	// Get all members
-	members, err := uc.memberRepo.GetByGroupID(groupID)
+	members, err := uc.memberRepo.GetByGroupID(ctx, groupID)
 	if err != nil {
 		return nil, err
 	}
 
 	// Get total assignments
-	totalAssignments, err := uc.assignmentRepo.GetCountByGroupID(groupID)
+	totalAssignments, err := uc.assignmentRepo.GetCountByGroupID(ctx, groupID)
 	if err != nil {
 		return nil, err
 	}
@@ -205,7 +206,7 @@ func (uc *AssignmentUseCase) GetStats(groupID int64) (*domain.AssignmentStats, e
 		memberIDs[i] = m.ID
 	}
 
-	counts, err := uc.assignmentRepo.GetCountsByMemberIDs(memberIDs)
+	counts, err := uc.assignmentRepo.GetCountsByMemberIDs(ctx, memberIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -248,9 +249,9 @@ func (uc *AssignmentUseCase) GetStats(groupID int64) (*domain.AssignmentStats, e
 }
 
 // CompleteAssignment marks an assignment as completed and decrements open count
-func (uc *AssignmentUseCase) CompleteAssignment(assignmentID int64) error {
+func (uc *AssignmentUseCase) CompleteAssignment(ctx context.Context, assignmentID int64) error {
 	// Get the assignment
-	assignment, err := uc.assignmentRepo.GetByID(assignmentID)
+	assignment, err := uc.assignmentRepo.GetByID(ctx, assignmentID)
 	if err != nil {
 		return errors.New("assignment not found")
 	}
@@ -261,12 +262,12 @@ func (uc *AssignmentUseCase) CompleteAssignment(assignmentID int64) error {
 	}
 
 	// Update status to completed
-	if err := uc.assignmentRepo.UpdateStatus(assignmentID, domain.AssignmentStatusCompleted); err != nil {
+	if err := uc.assignmentRepo.UpdateStatus(ctx, assignmentID, domain.AssignmentStatusCompleted); err != nil {
 		return err
 	}
 
 	// Decrement open assignments count
-	if err := uc.memberRepo.DecrementOpenAssignments(assignment.MemberID); err != nil {
+	if err := uc.memberRepo.DecrementOpenAssignments(ctx, assignment.MemberID); err != nil {
 		// Log error but don't fail the completion
 		// TODO: Add proper logging
 	}
@@ -275,9 +276,9 @@ func (uc *AssignmentUseCase) CompleteAssignment(assignmentID int64) error {
 }
 
 // CancelAssignment marks an assignment as cancelled and decrements open count
-func (uc *AssignmentUseCase) CancelAssignment(assignmentID int64) error {
+func (uc *AssignmentUseCase) CancelAssignment(ctx context.Context, assignmentID int64) error {
 	// Get the assignment
-	assignment, err := uc.assignmentRepo.GetByID(assignmentID)
+	assignment, err := uc.assignmentRepo.GetByID(ctx, assignmentID)
 	if err != nil {
 		return errors.New("assignment not found")
 	}
@@ -288,12 +289,12 @@ func (uc *AssignmentUseCase) CancelAssignment(assignmentID int64) error {
 	}
 
 	// Update status to cancelled
-	if err := uc.assignmentRepo.UpdateStatus(assignmentID, domain.AssignmentStatusCancelled); err != nil {
+	if err := uc.assignmentRepo.UpdateStatus(ctx, assignmentID, domain.AssignmentStatusCancelled); err != nil {
 		return err
 	}
 
 	// Decrement open assignments count
-	if err := uc.memberRepo.DecrementOpenAssignments(assignment.MemberID); err != nil {
+	if err := uc.memberRepo.DecrementOpenAssignments(ctx, assignment.MemberID); err != nil {
 		// Log error but don't fail the cancellation
 		// TODO: Add proper logging
 	}

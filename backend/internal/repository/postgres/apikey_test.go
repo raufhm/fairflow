@@ -1,6 +1,7 @@
 package postgres_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -28,7 +29,7 @@ func TestAPIKeyRepository_Create(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(1)
 	mock.ExpectQuery(`INSERT INTO "api_keys"`).WillReturnRows(rows)
 
-	err = apiKeyRepo.Create(apiKey)
+	err = apiKeyRepo.Create(context.Background(), apiKey)
 
 	assert.NoError(t, err)
 }
@@ -44,7 +45,7 @@ func TestAPIKeyRepository_GetByID(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(1)
 	mock.ExpectQuery(`SELECT (.+) FROM "api_keys"`).WillReturnRows(rows)
 
-	_, err = apiKeyRepo.GetByID(1)
+	_, err = apiKeyRepo.GetByID(context.Background(), 1)
 
 	assert.NoError(t, err)
 }
@@ -60,7 +61,7 @@ func TestAPIKeyRepository_GetByHash(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(1)
 	mock.ExpectQuery(`SELECT (.+) FROM "api_keys"`).WillReturnRows(rows)
 
-	_, err = apiKeyRepo.GetByHash("hash")
+	_, err = apiKeyRepo.GetByHash(context.Background(), "hash")
 
 	assert.NoError(t, err)
 }
@@ -76,7 +77,7 @@ func TestAPIKeyRepository_GetByUserID(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(1)
 	mock.ExpectQuery(`SELECT (.+) FROM "api_keys"`).WillReturnRows(rows)
 
-	_, err = apiKeyRepo.GetByUserID(1)
+	_, err = apiKeyRepo.GetByUserID(context.Background(), 1)
 
 	assert.NoError(t, err)
 }
@@ -91,7 +92,7 @@ func TestAPIKeyRepository_Delete(t *testing.T) {
 
 	mock.ExpectExec(`DELETE FROM "api_keys"`).WillReturnResult(sqlmock.NewResult(1, 1))
 
-	err = apiKeyRepo.Delete(1)
+	err = apiKeyRepo.Delete(context.Background(), 1)
 
 	assert.NoError(t, err)
 }
@@ -106,7 +107,7 @@ func TestAPIKeyRepository_UpdateLastUsed(t *testing.T) {
 
 	mock.ExpectExec(`UPDATE "api_keys"`).WillReturnResult(sqlmock.NewResult(1, 1))
 
-	err = apiKeyRepo.UpdateLastUsed(1)
+	err = apiKeyRepo.UpdateLastUsed(context.Background(), 1)
 
 	assert.NoError(t, err)
 }

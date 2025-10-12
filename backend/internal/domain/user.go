@@ -1,6 +1,9 @@
 package domain
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 // UserRole defines the available user roles
 type UserRole string
@@ -26,11 +29,11 @@ type User struct {
 
 // UserRepository defines the interface for user data access
 type UserRepository interface {
-	Create(user *User) error
-	GetByID(id int64) (*User, error)
-	GetByEmail(email string) (*User, error)
-	GetAll() ([]*User, error)
-	Update(user *User) error
-	Delete(id int64) error
-	UpdateRole(id int64, role UserRole) error
+	Create(ctx context.Context, user *User) error
+	GetByID(ctx context.Context, id int64) (*User, error)
+	GetByEmail(ctx context.Context, email string) (*User, error)
+	GetAll(ctx context.Context) ([]*User, error)
+	Update(ctx context.Context, user *User) error
+	Delete(ctx context.Context, id int64) error
+	UpdateRole(ctx context.Context, id int64, role UserRole) error
 }

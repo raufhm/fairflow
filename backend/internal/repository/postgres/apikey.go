@@ -17,15 +17,13 @@ func NewAPIKeyRepository(db *bun.DB) domain.APIKeyRepository {
 	return &apiKeyRepository{db: db}
 }
 
-func (r *apiKeyRepository) Create(apiKey *domain.APIKey) error {
-	ctx := context.Background()
+func (r *apiKeyRepository) Create(ctx context.Context, apiKey *domain.APIKey) error {
 	apiKey.CreatedAt = time.Now()
 	_, err := r.db.NewInsert().Model(apiKey).Exec(ctx)
 	return err
 }
 
-func (r *apiKeyRepository) GetByID(id int64) (*domain.APIKey, error) {
-	ctx := context.Background()
+func (r *apiKeyRepository) GetByID(ctx context.Context, id int64) (*domain.APIKey, error) {
 	apiKey := &domain.APIKey{Active: true}
 	err := r.db.NewSelect().Model(apiKey).Where("id = ?", id).Scan(ctx)
 	if err != nil {
@@ -34,8 +32,7 @@ func (r *apiKeyRepository) GetByID(id int64) (*domain.APIKey, error) {
 	return apiKey, nil
 }
 
-func (r *apiKeyRepository) GetByHash(hash string) (*domain.APIKey, error) {
-	ctx := context.Background()
+func (r *apiKeyRepository) GetByHash(ctx context.Context, hash string) (*domain.APIKey, error) {
 	apiKey := &domain.APIKey{Active: true}
 	err := r.db.NewSelect().Model(apiKey).Where("key_hash = ?", hash).Scan(ctx)
 	if err != nil {
@@ -44,8 +41,7 @@ func (r *apiKeyRepository) GetByHash(hash string) (*domain.APIKey, error) {
 	return apiKey, nil
 }
 
-func (r *apiKeyRepository) GetByUserID(userID int64) ([]*domain.APIKey, error) {
-	ctx := context.Background()
+func (r *apiKeyRepository) GetByUserID(ctx context.Context, userID int64) ([]*domain.APIKey, error) {
 	var apiKeys []*domain.APIKey
 	err := r.db.NewSelect().
 		Model(&apiKeys).
@@ -64,14 +60,12 @@ func (r *apiKeyRepository) GetByUserID(userID int64) ([]*domain.APIKey, error) {
 	return apiKeys, nil
 }
 
-func (r *apiKeyRepository) Delete(id int64) error {
-	ctx := context.Background()
+func (r *apiKeyRepository) Delete(ctx context.Context, id int64) error {
 	_, err := r.db.NewDelete().Model(&domain.APIKey{}).Where("id = ?", id).Exec(ctx)
 	return err
 }
 
-func (r *apiKeyRepository) UpdateLastUsed(id int64) error {
-	ctx := context.Background()
+func (r *apiKeyRepository) UpdateLastUsed(ctx context.Context, id int64) error {
 	_, err := r.db.NewUpdate().
 		Model(&domain.APIKey{}).
 		Set("last_used_at = ?", time.Now()).

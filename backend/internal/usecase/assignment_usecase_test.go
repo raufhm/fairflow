@@ -1,6 +1,7 @@
 package usecase_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/raufhm/fairflow/internal/domain"
@@ -24,7 +25,7 @@ func TestWeightedRoundRobin(t *testing.T) {
 		Strategy: domain.StrategyWeightedRoundRobin,
 		Active:   true,
 	}
-	groupRepo.Create(group)
+	groupRepo.Create(context.Background(), group)
 
 	// Create members with different weights
 	members := []*domain.Member{
@@ -34,7 +35,7 @@ func TestWeightedRoundRobin(t *testing.T) {
 	}
 
 	for _, m := range members {
-		memberRepo.Create(m)
+		memberRepo.Create(context.Background(), m)
 	}
 
 	// Test: Get next assignee multiple times
@@ -42,7 +43,7 @@ func TestWeightedRoundRobin(t *testing.T) {
 	totalAssignments := 12 // 2+1+3 = 6, so 12 should distribute evenly
 
 	for i := 0; i < totalAssignments; i++ {
-		next, err := uc.CalculateNextAssignee(group.ID)
+		next, err := uc.CalculateNextAssignee(context.Background(), group.ID)
 		if err != nil {
 			t.Fatalf("Failed to get next assignee: %v", err)
 		}
@@ -53,7 +54,7 @@ func TestWeightedRoundRobin(t *testing.T) {
 		assignmentCounts[next.Name]++
 
 		// Record assignment
-		_, _, err = uc.RecordAssignment(group.ID, 1, &next.ID, nil)
+		_, _, err = uc.RecordAssignment(context.Background(), group.ID, 1, &next.ID, nil)
 		if err != nil {
 			t.Fatalf("Failed to record assignment: %v", err)
 		}
@@ -92,7 +93,7 @@ func TestAvailabilityRespecting(t *testing.T) {
 		Strategy: domain.StrategyWeightedRoundRobin,
 		Active:   true,
 	}
-	groupRepo.Create(group)
+	groupRepo.Create(context.Background(), group)
 
 	// Create members - one unavailable
 	members := []*domain.Member{
@@ -102,12 +103,12 @@ func TestAvailabilityRespecting(t *testing.T) {
 	}
 
 	for _, m := range members {
-		memberRepo.Create(m)
+		memberRepo.Create(context.Background(), m)
 	}
 
 	// Test: Get next assignee - should only return available members
 	for i := 0; i < 10; i++ {
-		next, err := uc.CalculateNextAssignee(group.ID)
+		next, err := uc.CalculateNextAssignee(context.Background(), group.ID)
 		if err != nil {
 			t.Fatalf("Failed to get next assignee: %v", err)
 		}
@@ -116,7 +117,7 @@ func TestAvailabilityRespecting(t *testing.T) {
 			t.Fatal("Bob should not be assigned (unavailable)")
 		}
 
-		_, _, err = uc.RecordAssignment(group.ID, 1, &next.ID, nil)
+		_, _, err = uc.RecordAssignment(context.Background(), group.ID, 1, &next.ID, nil)
 		if err != nil {
 			t.Fatalf("Failed to record assignment: %v", err)
 		}
@@ -135,21 +136,21 @@ func TestGetAssignments(t *testing.T) {
 
 	// Create group and member
 	group := &domain.Group{UserID: 1, Name: "Test", Strategy: domain.StrategyWeightedRoundRobin, Active: true}
-	groupRepo.Create(group)
+	groupRepo.Create(context.Background(), group)
 
 	member := &domain.Member{GroupID: group.ID, Name: "Alice", Weight: 1, Active: true, Available: true}
-	memberRepo.Create(member)
+	memberRepo.Create(context.Background(), member)
 
 	// Record assignments
 	for i := 0; i < 5; i++ {
-		_, _, err := uc.RecordAssignment(group.ID, 1, &member.ID, nil)
+		_, _, err := uc.RecordAssignment(context.Background(), group.ID, 1, &member.ID, nil)
 		if err != nil {
 			t.Fatalf("Failed to record assignment: %v", err)
 		}
 	}
 
 	// Get assignments
-	assignments, total, err := uc.GetAssignments(group.ID, 100, 0)
+	assignments, total, err := uc.GetAssignments(context.Background(), group.ID, 100, 0)
 	if err != nil {
 		t.Fatalf("Failed to get assignments: %v", err)
 	}

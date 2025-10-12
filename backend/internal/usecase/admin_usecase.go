@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -23,12 +24,12 @@ func NewAdminUseCase(
 }
 
 // GetAllUsers retrieves all users
-func (uc *AdminUseCase) GetAllUsers() ([]*domain.User, error) {
-	return uc.userRepo.GetAll()
+func (uc *AdminUseCase) GetAllUsers(ctx context.Context) ([]*domain.User, error) {
+	return uc.userRepo.GetAll(ctx)
 }
 
 // UpdateUserRole updates a user's role
-func (uc *AdminUseCase) UpdateUserRole(targetUserID, adminUserID int64, adminUserName string, role domain.UserRole) error {
+func (uc *AdminUseCase) UpdateUserRole(ctx context.Context, targetUserID, adminUserID int64, adminUserName string, role domain.UserRole) error {
 	// Safety checks
 	if targetUserID == adminUserID {
 		return errors.New("cannot modify your own account via this endpoint")
@@ -37,12 +38,12 @@ func (uc *AdminUseCase) UpdateUserRole(targetUserID, adminUserID int64, adminUse
 		return errors.New("cannot promote users to super_admin via API")
 	}
 
-	if err := uc.userRepo.UpdateRole(targetUserID, role); err != nil {
+	if err := uc.userRepo.UpdateRole(ctx, targetUserID, role); err != nil {
 		return err
 	}
 
 	// Audit log
-	_ = uc.auditRepo.Create(&domain.AuditLog{
+	_ = uc.auditRepo.Create(ctx, &domain.AuditLog{
 		UserID:       &adminUserID,
 		UserName:     adminUserName,
 		Action:       "User role changed",
@@ -56,17 +57,17 @@ func (uc *AdminUseCase) UpdateUserRole(targetUserID, adminUserID int64, adminUse
 }
 
 // DeleteUser deletes a user
-func (uc *AdminUseCase) DeleteUser(targetUserID, adminUserID int64, adminUserName string) error {
+func (uc *AdminUseCase) DeleteUser(ctx context.Context, targetUserID, adminUserID int64, adminUserName string) error {
 	if targetUserID == adminUserID {
 		return errors.New("cannot delete your own account")
 	}
 
-	if err := uc.userRepo.Delete(targetUserID); err != nil {
+	if err := uc.userRepo.Delete(ctx, targetUserID); err != nil {
 		return err
 	}
 
 	// Audit log
-	_ = uc.auditRepo.Create(&domain.AuditLog{
+	_ = uc.auditRepo.Create(ctx, &domain.AuditLog{
 		UserID:       &adminUserID,
 		UserName:     adminUserName,
 		Action:       "User deleted",
@@ -79,9 +80,9 @@ func (uc *AdminUseCase) DeleteUser(targetUserID, adminUserID int64, adminUserNam
 }
 
 // GetAuditLogs retrieves recent audit logs
-func (uc *AdminUseCase) GetAuditLogs(limit int) ([]*domain.AuditLog, error) {
+func (uc *AdminUseCase) GetAuditLogs(ctx context.Context, limit int) ([]*domain.AuditLog, error) {
 	if limit <= 0 || limit > 1000 {
 		limit = 100
 	}
-	return uc.auditRepo.GetRecent(limit)
+	return uc.auditRepo.GetRecent(ctx, limit)
 }

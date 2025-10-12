@@ -1,4 +1,4 @@
-package http
+package restful
 
 import (
 	"net/http"

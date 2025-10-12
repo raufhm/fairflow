@@ -1,6 +1,9 @@
 package domain
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 // Webhook represents a webhook configuration
 type Webhook struct {
@@ -15,9 +18,9 @@ type Webhook struct {
 
 // WebhookRepository defines the interface for webhook data access
 type WebhookRepository interface {
-	Create(webhook *Webhook) error
-	GetByGroupID(groupID int64) ([]*Webhook, error)
-	GetActiveByGroupID(groupID int64) ([]*Webhook, error)
-	Update(webhook *Webhook) error
-	Delete(id int64) error
+	Create(ctx context.Context, webhook *Webhook) error
+	GetByGroupID(ctx context.Context, groupID int64) ([]*Webhook, error)
+	GetActiveByGroupID(ctx context.Context, groupID int64) ([]*Webhook, error)
+	Update(ctx context.Context, webhook *Webhook) error
+	Delete(ctx context.Context, id int64) error
 }

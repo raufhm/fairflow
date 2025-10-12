@@ -2,6 +2,7 @@ package webhook
 
 import (
 	"bytes"
+	"context"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
@@ -37,8 +38,8 @@ type Event struct {
 }
 
 // Notify sends a webhook notification to all registered webhooks for a group
-func (n *Notifier) Notify(groupID int64, eventType string, data map[string]interface{}) error {
-	webhooks, err := n.webhookRepo.GetActiveByGroupID(groupID)
+func (n *Notifier) Notify(ctx context.Context, groupID int64, eventType string, data map[string]interface{}) error {
+	webhooks, err := n.webhookRepo.GetActiveByGroupID(ctx, groupID)
 	if err != nil {
 		return fmt.Errorf("failed to get webhooks: %w", err)
 	}
@@ -55,14 +56,14 @@ func (n *Notifier) Notify(groupID int64, eventType string, data map[string]inter
 			continue
 		}
 
-		go n.sendWebhook(webhook, event)
+		go n.sendWebhook(ctx, webhook, event)
 	}
 
 	return nil
 }
 
 // sendWebhook sends a single webhook request
-func (n *Notifier) sendWebhook(webhook *domain.Webhook, event Event) {
+func (n *Notifier) sendWebhook(ctx context.Context, webhook *domain.Webhook, event Event) {
 	payload, err := json.Marshal(event)
 	if err != nil {
 		fmt.Printf("Failed to marshal webhook payload: %v\n", err)
@@ -72,7 +73,7 @@ func (n *Notifier) sendWebhook(webhook *domain.Webhook, event Event) {
 	// Create HMAC signature
 	signature := generateSignature(payload, webhook.Secret)
 
-	req, err := http.NewRequest("POST", webhook.URL, bytes.NewBuffer(payload))
+	req, err := http.NewRequestWithContext(ctx, "POST", webhook.URL, bytes.NewBuffer(payload))
 	if err != nil {
 		fmt.Printf("Failed to create webhook request: %v\n", err)
 		return

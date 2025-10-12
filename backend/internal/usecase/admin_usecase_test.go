@@ -1,6 +1,7 @@
 package usecase_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/raufhm/fairflow/internal/domain"
@@ -15,7 +16,7 @@ func TestGetAllUsers(t *testing.T) {
 	auditRepo := &mockAuditRepo{}
 	uc := usecase.NewAdminUseCase(userRepo, auditRepo)
 
-	users, err := uc.GetAllUsers()
+	users, err := uc.GetAllUsers(context.Background())
 
 	assert.NoError(t, err)
 	assert.Len(t, users, 2)
@@ -28,10 +29,10 @@ func TestUpdateUserRole(t *testing.T) {
 	auditRepo := &mockAuditRepo{}
 	uc := usecase.NewAdminUseCase(userRepo, auditRepo)
 
-	err := uc.UpdateUserRole(2, 1, "Admin", domain.RoleAdmin)
+	err := uc.UpdateUserRole(context.Background(), 2, 1, "Admin", domain.RoleAdmin)
 
 	assert.NoError(t, err)
-	user, _ := userRepo.GetByID(2)
+	user, _ := userRepo.GetByID(context.Background(), 2)
 	assert.Equal(t, domain.RoleAdmin, user.Role)
 }
 
@@ -42,10 +43,10 @@ func TestDeleteUser(t *testing.T) {
 	auditRepo := &mockAuditRepo{}
 	uc := usecase.NewAdminUseCase(userRepo, auditRepo)
 
-	err := uc.DeleteUser(2, 1, "Admin")
+	err := uc.DeleteUser(context.Background(), 2, 1, "Admin")
 
 	assert.NoError(t, err)
-	user, _ := userRepo.GetByID(2)
+	user, _ := userRepo.GetByID(context.Background(), 2)
 	assert.Nil(t, user)
 }
 
@@ -53,7 +54,7 @@ func TestGetAuditLogs(t *testing.T) {
 	auditRepo := &mockAuditRepo{}
 	uc := usecase.NewAdminUseCase(nil, auditRepo)
 
-	_, err := uc.GetAuditLogs(10)
+	_, err := uc.GetAuditLogs(context.Background(), 10)
 
 	assert.NoError(t, err)
 }

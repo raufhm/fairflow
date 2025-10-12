@@ -1,6 +1,7 @@
 package postgres_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -29,7 +30,7 @@ func TestWebhookRepository_Create(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(1)
 	mock.ExpectQuery(`INSERT INTO "webhooks"`).WillReturnRows(rows)
 
-	err = webhookRepo.Create(webhook)
+	err = webhookRepo.Create(context.Background(), webhook)
 
 	assert.NoError(t, err)
 }
@@ -45,7 +46,7 @@ func TestWebhookRepository_GetByGroupID(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(1)
 	mock.ExpectQuery(`SELECT (.+) FROM "webhooks"`).WillReturnRows(rows)
 
-	_, err = webhookRepo.GetByGroupID(1)
+	_, err = webhookRepo.GetByGroupID(context.Background(), 1)
 
 	assert.NoError(t, err)
 }
@@ -61,7 +62,7 @@ func TestWebhookRepository_GetActiveByGroupID(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(1)
 	mock.ExpectQuery(`SELECT (.+) FROM "webhooks"`).WillReturnRows(rows)
 
-	_, err = webhookRepo.GetActiveByGroupID(1)
+	_, err = webhookRepo.GetActiveByGroupID(context.Background(), 1)
 
 	assert.NoError(t, err)
 }
@@ -84,7 +85,7 @@ func TestWebhookRepository_Update(t *testing.T) {
 
 	mock.ExpectExec(`UPDATE "webhooks"`).WillReturnResult(sqlmock.NewResult(1, 1))
 
-	err = webhookRepo.Update(webhook)
+	err = webhookRepo.Update(context.Background(), webhook)
 
 	assert.NoError(t, err)
 }
@@ -99,7 +100,7 @@ func TestWebhookRepository_Delete(t *testing.T) {
 
 	mock.ExpectExec(`DELETE FROM "webhooks"`).WillReturnResult(sqlmock.NewResult(1, 1))
 
-	err = webhookRepo.Delete(1)
+	err = webhookRepo.Delete(context.Background(), 1)
 
 	assert.NoError(t, err)
 }

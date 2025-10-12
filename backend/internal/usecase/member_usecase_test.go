@@ -1,6 +1,7 @@
 package usecase_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/raufhm/fairflow/internal/domain"
@@ -14,7 +15,7 @@ func TestCreateMember(t *testing.T) {
 	auditRepo := &mockAuditRepo{}
 	uc := usecase.NewMemberUseCase(memberRepo, groupRepo, auditRepo)
 
-	member, err := uc.CreateMember(1, 1, "Admin", "Test Member", nil, 100)
+	member, err := uc.CreateMember(context.Background(), 1, 1, "Admin", "Test Member", nil, 100)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, member)
@@ -27,7 +28,7 @@ func TestGetMembers(t *testing.T) {
 	memberRepo.members[2] = &domain.Member{ID: 2, GroupID: 1, Name: "Test Member 2"}
 	uc := usecase.NewMemberUseCase(memberRepo, nil, nil)
 
-	members, err := uc.GetMembers(1)
+	members, err := uc.GetMembers(context.Background(), 1)
 
 	assert.NoError(t, err)
 	assert.Len(t, members, 2)
@@ -38,7 +39,7 @@ func TestGetMember(t *testing.T) {
 	memberRepo.members[1] = &domain.Member{ID: 1, GroupID: 1, Name: "Test Member"}
 	uc := usecase.NewMemberUseCase(memberRepo, nil, nil)
 
-	member, err := uc.GetMember(1)
+	member, err := uc.GetMember(context.Background(), 1)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, member)
@@ -52,10 +53,10 @@ func TestUpdateMember(t *testing.T) {
 	uc := usecase.NewMemberUseCase(memberRepo, newMockGroupRepo(), auditRepo)
 
 	newName := "New Name"
-	err := uc.UpdateMember(1, 1, "Admin", &newName, nil, nil, nil)
+	err := uc.UpdateMember(context.Background(), 1, 1, "Admin", &newName, nil, nil, nil)
 
 	assert.NoError(t, err)
-	member, _ := memberRepo.GetByID(1)
+	member, _ := memberRepo.GetByID(context.Background(), 1)
 	assert.Equal(t, "New Name", member.Name)
 }
 
@@ -65,10 +66,10 @@ func TestDeleteMember(t *testing.T) {
 	auditRepo := &mockAuditRepo{}
 	uc := usecase.NewMemberUseCase(memberRepo, newMockGroupRepo(), auditRepo)
 
-	err := uc.DeleteMember(1, 1, "Admin")
+	err := uc.DeleteMember(context.Background(), 1, 1, "Admin")
 
 	assert.NoError(t, err)
-	member, _ := memberRepo.GetByID(1)
+	member, _ := memberRepo.GetByID(context.Background(), 1)
 	assert.Nil(t, member)
 }
 
@@ -80,7 +81,7 @@ func TestGetMemberCapacity(t *testing.T) {
 	memberRepo.assignmentCounts[1] = 5
 	uc := usecase.NewMemberUseCase(memberRepo, nil, nil)
 
-	capacity, err := uc.GetMemberCapacity(1)
+	capacity, err := uc.GetMemberCapacity(context.Background(), 1)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, capacity)

@@ -1,6 +1,7 @@
 package postgres_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -28,7 +29,7 @@ func TestMemberRepository_Create(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(1)
 	mock.ExpectQuery(`INSERT INTO "members"`).WillReturnRows(rows)
 
-	err = memberRepo.Create(member)
+	err = memberRepo.Create(context.Background(), member)
 
 	assert.NoError(t, err)
 }
@@ -44,7 +45,7 @@ func TestMemberRepository_GetByID(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(1)
 	mock.ExpectQuery(`SELECT (.+) FROM "members"`).WillReturnRows(rows)
 
-	_, err = memberRepo.GetByID(1)
+	_, err = memberRepo.GetByID(context.Background(), 1)
 
 	assert.NoError(t, err)
 }
@@ -60,7 +61,7 @@ func TestMemberRepository_GetByGroupID(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(1)
 	mock.ExpectQuery(`SELECT (.+) FROM "members"`).WillReturnRows(rows)
 
-	_, err = memberRepo.GetByGroupID(1)
+	_, err = memberRepo.GetByGroupID(context.Background(), 1)
 
 	assert.NoError(t, err)
 }
@@ -76,7 +77,7 @@ func TestMemberRepository_GetActiveByGroupID(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(1)
 	mock.ExpectQuery(`SELECT (.+) FROM "members"`).WillReturnRows(rows)
 
-	_, err = memberRepo.GetActiveByGroupID(1)
+	_, err = memberRepo.GetActiveByGroupID(context.Background(), 1)
 
 	assert.NoError(t, err)
 }
@@ -98,7 +99,7 @@ func TestMemberRepository_Update(t *testing.T) {
 
 	mock.ExpectExec(`UPDATE "members"`).WillReturnResult(sqlmock.NewResult(1, 1))
 
-	err = memberRepo.Update(member)
+	err = memberRepo.Update(context.Background(), member)
 
 	assert.NoError(t, err)
 }
@@ -113,7 +114,7 @@ func TestMemberRepository_Delete(t *testing.T) {
 
 	mock.ExpectExec(`DELETE FROM "members"`).WillReturnResult(sqlmock.NewResult(1, 1))
 
-	err = memberRepo.Delete(1)
+	err = memberRepo.Delete(context.Background(), 1)
 
 	assert.NoError(t, err)
 }
@@ -128,7 +129,7 @@ func TestMemberRepository_IncrementOpenAssignments(t *testing.T) {
 
 	mock.ExpectExec(`UPDATE "members"`).WillReturnResult(sqlmock.NewResult(1, 1))
 
-	err = memberRepo.IncrementOpenAssignments(1)
+	err = memberRepo.IncrementOpenAssignments(context.Background(), 1)
 
 	assert.NoError(t, err)
 }
@@ -143,7 +144,7 @@ func TestMemberRepository_DecrementOpenAssignments(t *testing.T) {
 
 	mock.ExpectExec(`UPDATE "members"`).WillReturnResult(sqlmock.NewResult(1, 1))
 
-	err = memberRepo.DecrementOpenAssignments(1)
+	err = memberRepo.DecrementOpenAssignments(context.Background(), 1)
 
 	assert.NoError(t, err)
 }
@@ -159,7 +160,7 @@ func TestMemberRepository_GetDailyAssignmentCount(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"count"}).AddRow(1)
 	mock.ExpectQuery(`SELECT count(.+) FROM "assignments"`).WillReturnRows(rows)
 
-	_, err = memberRepo.GetDailyAssignmentCount(1)
+	_, err = memberRepo.GetDailyAssignmentCount(context.Background(), 1)
 
 	assert.NoError(t, err)
 }

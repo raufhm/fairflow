@@ -1,4 +1,4 @@
-package http
+package restful
 
 import (
 	"encoding/json"
@@ -37,6 +37,7 @@ func (h *AnalyticsHandler) GetFairnessMetrics(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	ctx := r.Context()
 	groupID, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
 		http.Error(w, `{"message":"Invalid group ID"}`, http.StatusBadRequest)
@@ -44,7 +45,7 @@ func (h *AnalyticsHandler) GetFairnessMetrics(w http.ResponseWriter, r *http.Req
 	}
 
 	// Get all members with assignment counts
-	members, err := h.memberUseCase.GetMembers(groupID)
+	members, err := h.memberUseCase.GetMembers(ctx, groupID)
 	if err != nil {
 		http.Error(w, `{"message":"Failed to fetch members"}`, http.StatusInternalServerError)
 		return
@@ -108,6 +109,7 @@ func (h *AnalyticsHandler) GetWorkloadTrends(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	ctx := r.Context()
 	groupID, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
 		http.Error(w, `{"message":"Invalid group ID"}`, http.StatusBadRequest)
@@ -115,7 +117,7 @@ func (h *AnalyticsHandler) GetWorkloadTrends(w http.ResponseWriter, r *http.Requ
 	}
 
 	// Get assignments for the last 30 days (get all with high limit)
-	assignments, _, err := h.assignmentUseCase.GetAssignments(groupID, 10000, 0)
+	assignments, _, err := h.assignmentUseCase.GetAssignments(ctx, groupID, 10000, 0)
 	if err != nil {
 		http.Error(w, `{"message":"Failed to fetch assignments"}`, http.StatusInternalServerError)
 		return
@@ -160,13 +162,14 @@ func (h *AnalyticsHandler) GetMemberPerformance(w http.ResponseWriter, r *http.R
 		return
 	}
 
+	ctx := r.Context()
 	groupID, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
 		http.Error(w, `{"message":"Invalid group ID"}`, http.StatusBadRequest)
 		return
 	}
 
-	members, err := h.memberUseCase.GetMembers(groupID)
+	members, err := h.memberUseCase.GetMembers(ctx, groupID)
 	if err != nil {
 		http.Error(w, `{"message":"Failed to fetch members"}`, http.StatusInternalServerError)
 		return

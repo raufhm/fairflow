@@ -16,9 +16,7 @@ func NewWebhookRepository(db *bun.DB) domain.WebhookRepository {
 	return &webhookRepository{db: db}
 }
 
-func (r *webhookRepository) Create(webhook *domain.Webhook) error {
-	ctx := context.Background()
-
+func (r *webhookRepository) Create(ctx context.Context, webhook *domain.Webhook) error {
 	// Convert events slice to JSON
 	eventsJSON, err := json.Marshal(webhook.Events)
 	if err != nil {
@@ -34,8 +32,7 @@ func (r *webhookRepository) Create(webhook *domain.Webhook) error {
 	return err
 }
 
-func (r *webhookRepository) GetByGroupID(groupID int64) ([]*domain.Webhook, error) {
-	ctx := context.Background()
+func (r *webhookRepository) GetByGroupID(ctx context.Context, groupID int64) ([]*domain.Webhook, error) {
 	var webhooks []*domain.Webhook
 
 	err := r.db.NewSelect().
@@ -58,8 +55,7 @@ func (r *webhookRepository) GetByGroupID(groupID int64) ([]*domain.Webhook, erro
 	return webhooks, nil
 }
 
-func (r *webhookRepository) GetActiveByGroupID(groupID int64) ([]*domain.Webhook, error) {
-	ctx := context.Background()
+func (r *webhookRepository) GetActiveByGroupID(ctx context.Context, groupID int64) ([]*domain.Webhook, error) {
 	var webhooks []*domain.Webhook
 
 	err := r.db.NewSelect().
@@ -70,9 +66,7 @@ func (r *webhookRepository) GetActiveByGroupID(groupID int64) ([]*domain.Webhook
 	return webhooks, err
 }
 
-func (r *webhookRepository) Update(webhook *domain.Webhook) error {
-	ctx := context.Background()
-
+func (r *webhookRepository) Update(ctx context.Context, webhook *domain.Webhook) error {
 	eventsJSON, err := json.Marshal(webhook.Events)
 	if err != nil {
 		return err
@@ -88,9 +82,7 @@ func (r *webhookRepository) Update(webhook *domain.Webhook) error {
 	return err
 }
 
-func (r *webhookRepository) Delete(id int64) error {
-	ctx := context.Background()
-
+func (r *webhookRepository) Delete(ctx context.Context, id int64) error {
 	_, err := r.db.NewDelete().
 		Model((*domain.Webhook)(nil)).
 		Where("id = ?", id).

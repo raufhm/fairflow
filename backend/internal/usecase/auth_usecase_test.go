@@ -1,6 +1,7 @@
 package usecase_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/raufhm/fairflow/internal/domain"
@@ -16,7 +17,7 @@ func TestRegister(t *testing.T) {
 	uc := usecase.NewAuthUseCase(userRepo, apiKeyRepo, auditRepo, "test-secret")
 
 	// Test successful registration
-	user, token, err := uc.Register("john@example.com", "password123", "John Doe", domain.RoleUser)
+	user, token, err := uc.Register(context.Background(), "john@example.com", "password123", "John Doe", domain.RoleUser)
 	if err != nil {
 		t.Fatalf("Failed to register user: %v", err)
 	}
@@ -40,7 +41,7 @@ func TestRegister(t *testing.T) {
 	}
 
 	// Test duplicate email
-	_, _, err = uc.Register("john@example.com", "password456", "Jane Doe", domain.RoleUser)
+	_, _, err = uc.Register(context.Background(), "john@example.com", "password456", "Jane Doe", domain.RoleUser)
 	if err == nil {
 		t.Error("Expected error for duplicate email")
 	}
@@ -54,13 +55,13 @@ func TestLogin(t *testing.T) {
 	uc := usecase.NewAuthUseCase(userRepo, apiKeyRepo, auditRepo, "test-secret")
 
 	// Register a user
-	_, _, err := uc.Register("john@example.com", "password123", "John Doe", domain.RoleUser)
+	_, _, err := uc.Register(context.Background(), "john@example.com", "password123", "John Doe", domain.RoleUser)
 	if err != nil {
 		t.Fatalf("Failed to register user: %v", err)
 	}
 
 	// Test successful login
-	user, token, err := uc.Login("john@example.com", "password123")
+	user, token, err := uc.Login(context.Background(), "john@example.com", "password123")
 	if err != nil {
 		t.Fatalf("Failed to login: %v", err)
 	}
@@ -73,13 +74,13 @@ func TestLogin(t *testing.T) {
 	}
 
 	// Test wrong password
-	_, _, err = uc.Login("john@example.com", "wrongpassword")
+	_, _, err = uc.Login(context.Background(), "john@example.com", "wrongpassword")
 	if err == nil {
 		t.Error("Expected error for wrong password")
 	}
 
 	// Test non-existent user
-	_, _, err = uc.Login("nonexistent@example.com", "password")
+	_, _, err = uc.Login(context.Background(), "nonexistent@example.com", "password")
 	if err == nil {
 		t.Error("Expected error for non-existent user")
 	}
@@ -94,10 +95,10 @@ func TestGenerateAPIKey(t *testing.T) {
 
 	// Create a user
 	user := &domain.User{Name: "John", Email: "john@example.com", Role: domain.RoleUser}
-	userRepo.Create(user)
+	userRepo.Create(context.Background(), user)
 
 	// Generate API key
-	rawKey, keyID, err := uc.CreateAPIKey(user.ID, "Test Key")
+	rawKey, keyID, err := uc.CreateAPIKey(context.Background(), user.ID, "Test Key")
 	if err != nil {
 		t.Fatalf("Failed to generate API key: %v", err)
 	}
@@ -110,7 +111,7 @@ func TestGenerateAPIKey(t *testing.T) {
 	}
 
 	// Verify the key was stored
-	keys, _ := uc.GetAPIKeys(user.ID)
+	keys, _ := uc.GetAPIKeys(context.Background(), user.ID)
 	if len(keys) != 1 {
 		t.Errorf("Expected 1 API key, got %d", len(keys))
 	}
@@ -125,12 +126,12 @@ func TestVerifyAPIKey(t *testing.T) {
 
 	// Create user and API key
 	user := &domain.User{Name: "John", Email: "john@example.com", Role: domain.RoleUser}
-	userRepo.Create(user)
+	userRepo.Create(context.Background(), user)
 
-	rawKey, keyID, _ := uc.CreateAPIKey(user.ID, "Test Key")
+	rawKey, keyID, _ := uc.CreateAPIKey(context.Background(), user.ID, "Test Key")
 
 	// Verify valid API key
-	verifiedUser, err := uc.VerifyAPIKey(rawKey)
+	verifiedUser, err := uc.VerifyAPIKey(context.Background(), rawKey)
 	if err != nil {
 		t.Fatalf("Failed to verify API key: %v", err)
 	}
@@ -139,16 +140,16 @@ func TestVerifyAPIKey(t *testing.T) {
 	}
 
 	// Revoke API key
-	uc.RevokeAPIKey(user.ID, keyID)
+	uc.RevokeAPIKey(context.Background(), user.ID, keyID)
 
 	// Verify revoked key fails
-	_, err = uc.VerifyAPIKey(rawKey)
+	_, err = uc.VerifyAPIKey(context.Background(), rawKey)
 	if err == nil {
 		t.Error("Expected error for revoked API key")
 	}
 
 	// Verify invalid key fails
-	_, err = uc.VerifyAPIKey("invalid-key")
+	_, err = uc.VerifyAPIKey(context.Background(), "invalid-key")
 	if err == nil {
 		t.Error("Expected error for invalid API key")
 	}

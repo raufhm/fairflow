@@ -1,6 +1,9 @@
 package domain
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 // AuditLog represents an audit log entry
 type AuditLog struct {
@@ -17,6 +20,6 @@ type AuditLog struct {
 
 // AuditLogRepository defines the interface for audit log data access
 type AuditLogRepository interface {
-	Create(log *AuditLog) error
-	GetRecent(limit int) ([]*AuditLog, error)
+	Create(ctx context.Context, log *AuditLog) error
+	GetRecent(ctx context.Context, limit int) ([]*AuditLog, error)
 }

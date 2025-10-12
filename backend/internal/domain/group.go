@@ -1,6 +1,9 @@
 package domain
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 // AssignmentStrategy defines the strategy for assignments
 type AssignmentStrategy string
@@ -30,10 +33,10 @@ type Group struct {
 
 // GroupRepository defines the interface for group data access
 type GroupRepository interface {
-	Create(group *Group) error
-	GetByID(id int64) (*Group, error)
-	GetAll() ([]*Group, error)
-	GetByUserID(userID int64) ([]*Group, error)
-	Update(group *Group) error
-	Delete(id int64) error
+	Create(ctx context.Context, group *Group) error
+	GetByID(ctx context.Context, id int64) (*Group, error)
+	GetAll(ctx context.Context) ([]*Group, error)
+	GetByUserID(ctx context.Context, userID int64) ([]*Group, error)
+	Update(ctx context.Context, group *Group) error
+	Delete(ctx context.Context, id int64) error
 }

@@ -1,4 +1,4 @@
-package http
+package restful
 
 import (
 	"encoding/json"
@@ -31,7 +31,8 @@ type UpdateGroupRequest struct {
 
 // GetAllGroups retrieves all groups
 func (h *GroupHandler) GetAllGroups(w http.ResponseWriter, r *http.Request) {
-	groups, err := h.groupUseCase.GetAllGroups()
+	ctx := r.Context()
+	groups, err := h.groupUseCase.GetAllGroups(ctx)
 	if err != nil {
 		respondJSON(w, http.StatusInternalServerError, map[string]string{"message": "Failed to retrieve groups"})
 		return
@@ -47,6 +48,8 @@ func (h *GroupHandler) CreateGroup(w http.ResponseWriter, r *http.Request) {
 		respondJSON(w, http.StatusUnauthorized, map[string]string{"message": "Authentication required"})
 		return
 	}
+
+	ctx := r.Context()
 
 	var req CreateGroupRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -64,7 +67,7 @@ func (h *GroupHandler) CreateGroup(w http.ResponseWriter, r *http.Request) {
 		strategy = domain.StrategyWeightedRoundRobin
 	}
 
-	group, err := h.groupUseCase.CreateGroup(user.ID, user.Name, req.Name, req.Description, strategy)
+	group, err := h.groupUseCase.CreateGroup(ctx, user.ID, user.Name, req.Name, req.Description, strategy)
 	if err != nil {
 		respondJSON(w, http.StatusInternalServerError, map[string]string{"message": "Failed to create group"})
 		return
@@ -75,13 +78,14 @@ func (h *GroupHandler) CreateGroup(w http.ResponseWriter, r *http.Request) {
 
 // GetGroup retrieves a specific group
 func (h *GroupHandler) GetGroup(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	id := getIDFromPath(r, "/api/v1/groups/")
 	if id == 0 {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": "Invalid group ID"})
 		return
 	}
 
-	group, err := h.groupUseCase.GetGroup(id)
+	group, err := h.groupUseCase.GetGroup(ctx, id)
 	if err != nil {
 		respondJSON(w, http.StatusInternalServerError, map[string]string{"message": "Failed to retrieve group"})
 		return
@@ -102,6 +106,7 @@ func (h *GroupHandler) UpdateGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
 	id := getIDFromPath(r, "/api/v1/groups/")
 	if id == 0 {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": "Invalid group ID"})
@@ -109,7 +114,7 @@ func (h *GroupHandler) UpdateGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if user can modify group
-	canModify, err := h.groupUseCase.CanModifyGroup(id, user.ID, user.Role)
+	canModify, err := h.groupUseCase.CanModifyGroup(ctx, id, user.ID, user.Role)
 	if err != nil {
 		respondJSON(w, http.StatusNotFound, map[string]string{"message": "Group not found"})
 		return
@@ -125,7 +130,7 @@ func (h *GroupHandler) UpdateGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	group, err := h.groupUseCase.UpdateGroup(id, user.ID, user.Name, req.Name, req.Description, req.Active)
+	group, err := h.groupUseCase.UpdateGroup(ctx, id, user.ID, user.Name, req.Name, req.Description, req.Active)
 	if err != nil {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": err.Error()})
 		return
@@ -142,6 +147,7 @@ func (h *GroupHandler) DeleteGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
 	id := getIDFromPath(r, "/api/v1/groups/")
 	if id == 0 {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": "Invalid group ID"})
@@ -149,7 +155,7 @@ func (h *GroupHandler) DeleteGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if user can modify group
-	canModify, err := h.groupUseCase.CanModifyGroup(id, user.ID, user.Role)
+	canModify, err := h.groupUseCase.CanModifyGroup(ctx, id, user.ID, user.Role)
 	if err != nil {
 		respondJSON(w, http.StatusNotFound, map[string]string{"message": "Group not found"})
 		return
@@ -159,7 +165,7 @@ func (h *GroupHandler) DeleteGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.groupUseCase.DeleteGroup(id, user.ID, user.Name); err != nil {
+	if err := h.groupUseCase.DeleteGroup(ctx, id, user.ID, user.Name); err != nil {
 		respondJSON(w, http.StatusInternalServerError, map[string]string{"message": "Failed to delete group"})
 		return
 	}
@@ -179,6 +185,7 @@ func (h *GroupHandler) PauseGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
 	id := getIDFromPath(r, "/api/v1/groups/", "/pause")
 	if id == 0 {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": "Invalid group ID"})
@@ -186,7 +193,7 @@ func (h *GroupHandler) PauseGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if user can modify group
-	canModify, err := h.groupUseCase.CanModifyGroup(id, user.ID, user.Role)
+	canModify, err := h.groupUseCase.CanModifyGroup(ctx, id, user.ID, user.Role)
 	if err != nil {
 		respondJSON(w, http.StatusNotFound, map[string]string{"message": "Group not found"})
 		return
@@ -202,7 +209,7 @@ func (h *GroupHandler) PauseGroup(w http.ResponseWriter, r *http.Request) {
 		req.Reason = nil
 	}
 
-	if err := h.groupUseCase.PauseGroup(id, user.ID, user.Name, req.Reason); err != nil {
+	if err := h.groupUseCase.PauseGroup(ctx, id, user.ID, user.Name, req.Reason); err != nil {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": err.Error()})
 		return
 	}
@@ -218,6 +225,7 @@ func (h *GroupHandler) ResumeGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
 	id := getIDFromPath(r, "/api/v1/groups/", "/resume")
 	if id == 0 {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": "Invalid group ID"})
@@ -225,7 +233,7 @@ func (h *GroupHandler) ResumeGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if user can modify group
-	canModify, err := h.groupUseCase.CanModifyGroup(id, user.ID, user.Role)
+	canModify, err := h.groupUseCase.CanModifyGroup(ctx, id, user.ID, user.Role)
 	if err != nil {
 		respondJSON(w, http.StatusNotFound, map[string]string{"message": "Group not found"})
 		return
@@ -235,7 +243,7 @@ func (h *GroupHandler) ResumeGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.groupUseCase.ResumeGroup(id, user.ID, user.Name); err != nil {
+	if err := h.groupUseCase.ResumeGroup(ctx, id, user.ID, user.Name); err != nil {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"message": err.Error()})
 		return
 	}

@@ -1,6 +1,7 @@
 package postgres_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -28,7 +29,7 @@ func TestGroupRepository_Create(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(1)
 	mock.ExpectQuery(`INSERT INTO "groups"`).WillReturnRows(rows)
 
-	err = groupRepo.Create(group)
+	err = groupRepo.Create(context.Background(), group)
 
 	assert.NoError(t, err)
 }
@@ -44,7 +45,7 @@ func TestGroupRepository_GetByID(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(1)
 	mock.ExpectQuery(`SELECT (.+) FROM "groups"`).WillReturnRows(rows)
 
-	_, err = groupRepo.GetByID(1)
+	_, err = groupRepo.GetByID(context.Background(), 1)
 
 	assert.NoError(t, err)
 }
@@ -60,7 +61,7 @@ func TestGroupRepository_GetAll(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(1)
 	mock.ExpectQuery(`SELECT (.+) FROM "groups"`).WillReturnRows(rows)
 
-	_, err = groupRepo.GetAll()
+	_, err = groupRepo.GetAll(context.Background())
 
 	assert.NoError(t, err)
 }
@@ -76,7 +77,7 @@ func TestGroupRepository_GetByUserID(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(1)
 	mock.ExpectQuery(`SELECT (.+) FROM "groups"`).WillReturnRows(rows)
 
-	_, err = groupRepo.GetByUserID(1)
+	_, err = groupRepo.GetByUserID(context.Background(), 1)
 
 	assert.NoError(t, err)
 }
@@ -98,7 +99,7 @@ func TestGroupRepository_Update(t *testing.T) {
 
 	mock.ExpectExec(`UPDATE "groups"`).WillReturnResult(sqlmock.NewResult(1, 1))
 
-	err = groupRepo.Update(group)
+	err = groupRepo.Update(context.Background(), group)
 
 	assert.NoError(t, err)
 }
@@ -113,7 +114,7 @@ func TestGroupRepository_Delete(t *testing.T) {
 
 	mock.ExpectExec(`DELETE FROM "groups"`).WillReturnResult(sqlmock.NewResult(1, 1))
 
-	err = groupRepo.Delete(1)
+	err = groupRepo.Delete(context.Background(), 1)
 
 	assert.NoError(t, err)
 }
